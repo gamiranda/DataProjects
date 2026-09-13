@@ -18,5 +18,5 @@ about:
 
 ### Projects
 
-* **[Projeto 1 - ECD Análise de Dados](https://link-do-seu-projeto-1.com)**
+* **[Projeto 1 - ECD Análise de Dados](quarto_archives/projeto1_analisededados.qmd)**
   Projeto 1 da disciplina de Análise de Dados da ECD

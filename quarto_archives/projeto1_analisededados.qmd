@@ -1,0 +1,248 @@
+---
+title: "Análise dos Hábitos Alimentares Durante a Pandemia de COVID-19"
+author: "Gabriel Miranda"
+format: 
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    code-fold: true
+editor: visual
+---
+
+```{r}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(knitr)
+library(stringr)
+library(gtsummary)
+
+dados0 <- read_excel("DadosNutri.xlsx")
+
+theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",") 
+```
+
+```{r}
+explicativas = c(
+     'Genero'
+    ,'Raca_cor'
+    ,'Regiao'
+    ,'Renda_familiar'
+    ,'Escolaridade'
+    ,'Trabalha'
+    ,'Idade'
+    ,'Dificuldade_Financeira'
+)
+desfechos = c(
+     'Alteracao_Pandemia'
+    ,'Frutas'
+    ,'Legumes_Verduras'
+    ,'Bebidas_Alcoolicas'
+    ,'Produtos_Industrializados'
+    ,'Consumo_agua'
+    ,'Embutidos'
+)
+```
+
+```{r}
+dados0 = dados0 %>%
+    select(all_of(explicativas), all_of(desfechos))
+```
+
+```{r}
+tbl_summary(
+    data = dados0 %>%
+      select(all_of(explicativas), "Alteracao_Pandemia"),
+    by = "Alteracao_Pandemia",
+    statistic = list(all_categorical() ~ "{n} ({p}%)",
+                     all_continuous() ~ "{mean} ({sd})"),
+    label = list(
+        Genero ~ "Gênero",
+        Raca_cor ~ "Raça/Cor",
+        Regiao ~ "Região",
+        Renda_familiar ~ "Renda familiar",
+        Escolaridade ~ "Escolaridade",
+        Trabalha ~ "Trabalha",
+        Idade ~ "Idade (anos)",
+        Dificuldade_Financeira ~ "Dificuldade financeira"
+  )                 
+) %>%
+    modify_spanning_header(all_stat_cols() ~ "**Alteração de hábitos alimentares na pandemia**") %>%
+    modify_header(label ~ "**Variáveis**") %>%
+    bold_labels() %>%
+    modify_footnote(
+        all_stat_cols() ~ 
+        "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP)."
+    ) %>%
+  add_p(
+    test = list(all_categorical() ~ "chisq.test"),
+    pvalue_fun = ~ style_pvalue(.x, digits = 3)
+  )
+
+
+```
+
+### Filtrando somente que declarou alteração de hábito na pandemia e selecionando as variáveis
+
+Aqui vou supor que quem respondeu 'Alteracao_Pandemia = Não' deveria ter preenchido nas variáveis associadas 'Não alterou
+
+```{r}
+dados = dados0 %>% filter(Alteracao_Pandemia == "Sim")
+```
+
+## Caracterizar o perfil sociodemográfico
+
+`r nrow(dados)` das `r nrow(dados0)` pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia. Esse é o público alvo desse estudo.
+
+```{r}
+table1 <- dados %>%
+  select(
+    Genero, Raca_cor, Regiao, Renda_familiar,
+    Escolaridade, Trabalha, Idade, Dificuldade_Financeira
+  ) %>%
+  tbl_summary(
+    statistic = list(
+      all_categorical() ~ "{n} ({p}%)",
+      all_continuous() ~ "{mean} ({sd}) [{min} - {max}]"
+    ),
+    digits = list(
+      all_continuous() ~ 2,
+      all_categorical() ~ c(0, 2)
+    ),
+    label = list(
+      Genero ~ "Gênero",
+      Raca_cor ~ "Raça/Cor",
+      Regiao ~ "Região",
+      Renda_familiar ~ "Renda Familiar",
+      Escolaridade ~ "Escolaridade",
+      Trabalha ~ "Trabalha",
+      Idade ~ "Idade",
+      Dificuldade_Financeira ~ "Dificuldade Financeira"
+    ),
+    missing = "no"
+  ) %>%
+  bold_labels()
+
+table1
+```
+
+```{r}
+table2 <- dados %>%
+  select(
+    Frutas, Legumes_Verduras, Bebidas_Alcoolicas,
+    Produtos_Industrializados, Consumo_agua, Embutidos
+  ) %>%
+  tbl_summary(
+    statistic = all_categorical() ~ "{n} ({p}%)",
+    digits = all_categorical() ~ c(0, 2),
+    label = list(
+      Frutas ~ "Frutas",
+      Legumes_Verduras ~ "Legumes e Verduras",
+      Bebidas_Alcoolicas ~ "Bebidas Alcoólicas",
+      Produtos_Industrializados ~ "Produtos Industrializados",
+      Consumo_agua ~ "Consumo de Água",
+      Embutidos ~ "Embutidos"
+    ),
+    missing = "no"
+  ) %>%
+  bold_labels()
+
+table2
+```
+
+```{r}
+jama_colors <- c('#374e55', '#df8f44', '#00a1d5', '#b24745')
+
+labels_desfechos <- list(
+  Frutas = "Frutas",
+  Legumes_Verduras = "Legumes e Verduras",
+  Bebidas_Alcoolicas = "Bebidas Alcoólicas",
+  Produtos_Industrializados = "Produtos Industrializados",
+  Consumo_agua = "Consumo de Água",
+  Embutidos = "Embutidos"
+)
+
+grafico_distribuicao <- function(df, col, labels_desfechos = list(), colors = jama_colors) {
+    
+  col_label <- if (col %in% names(labels_desfechos)) labels_desfechos[[col]] else col
+  
+  grafico <- ggplot(df, aes(x = .data[[col]], fill = .data[[col]])) +
+    geom_bar() +
+    stat_count(
+      geom = "text",
+      aes(label = after_stat(count)),
+      vjust = -0.5,
+      size = 4,
+      color = "black"
+    ) +
+    scale_fill_manual(values = colors) +
+    labs(
+      title = paste("Consumo de", col_label),
+      x = col_label,
+      y = "Contagem"
+    ) +
+    theme_bw() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none"
+    )
+  
+  return(grafico)
+}
+```
+
+```{r}
+grafico_distribuicao(
+    dados,
+    'Frutas',
+    labels_desfechos
+)
+
+```
+
+```{r}
+grafico_distribuicao(
+    dados,
+    'Legumes_Verduras',
+    labels_desfechos
+)
+
+```
+
+```{r}
+grafico_distribuicao(
+    dados,
+    'Bebidas_Alcoolicas',
+    labels_desfechos
+)
+
+```
+
+```{r}
+grafico_distribuicao(
+    dados,
+    'Produtos_Industrializados',
+    labels_desfechos
+)
+
+```
+
+```{r}
+grafico_distribuicao(
+    dados,
+    'Consumo_agua',
+    labels_desfechos
+)
+
+```
+
+```{r}
+grafico_distribuicao(
+    dados,
+    'Embutidos',
+    labels_desfechos
+)
+
+```

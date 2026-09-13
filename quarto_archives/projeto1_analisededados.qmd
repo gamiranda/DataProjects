@@ -1,5 +1,5 @@
 ---
-title: "Análise dos Hábitos Alimentares Durante a Pandemia de COVID-19"
+title: "Análise das alterações de hábitos alimentares durante a pandemia de COVID-19"
 author: "Gabriel Miranda"
 format: 
   html:
@@ -7,10 +7,11 @@ format:
     toc-depth: 3
     theme: cosmo
     code-fold: true
+    embed-resources: true
 editor: visual
 ---
 
-```{r}
+```{r echo=TRUE, warning=FALSE, message=FALSE}
 library(readxl)
 library(dplyr)
 library(ggplot2)
@@ -24,7 +25,7 @@ dados0 <- read_excel("DadosNutri.xlsx")
 theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",") 
 ```
 
-```{r}
+```{r echo=TRUE, warning=FALSE, message=FALSE}
 explicativas = c(
      'Genero'
     ,'Raca_cor'
@@ -46,12 +47,12 @@ desfechos = c(
 )
 ```
 
-```{r}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 dados0 = dados0 %>%
     select(all_of(explicativas), all_of(desfechos))
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 tbl_summary(
     data = dados0 %>%
       select(all_of(explicativas), "Alteracao_Pandemia"),
@@ -72,10 +73,7 @@ tbl_summary(
     modify_spanning_header(all_stat_cols() ~ "**Alteração de hábitos alimentares na pandemia**") %>%
     modify_header(label ~ "**Variáveis**") %>%
     bold_labels() %>%
-    modify_footnote(
-        all_stat_cols() ~ 
-        "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP)."
-    ) %>%
+    modify_footnote(all_stat_cols() ~ "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP).") %>%
   add_p(
     test = list(all_categorical() ~ "chisq.test"),
     pvalue_fun = ~ style_pvalue(.x, digits = 3)
@@ -88,7 +86,7 @@ tbl_summary(
 
 Aqui vou supor que quem respondeu 'Alteracao_Pandemia = Não' deveria ter preenchido nas variáveis associadas 'Não alterou
 
-```{r}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 dados = dados0 %>% filter(Alteracao_Pandemia == "Sim")
 ```
 
@@ -96,7 +94,7 @@ dados = dados0 %>% filter(Alteracao_Pandemia == "Sim")
 
 `r nrow(dados)` das `r nrow(dados0)` pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia. Esse é o público alvo desse estudo.
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 table1 <- dados %>%
   select(
     Genero, Raca_cor, Regiao, Renda_familiar,
@@ -128,7 +126,7 @@ table1 <- dados %>%
 table1
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 table2 <- dados %>%
   select(
     Frutas, Legumes_Verduras, Bebidas_Alcoolicas,
@@ -152,7 +150,7 @@ table2 <- dados %>%
 table2
 ```
 
-```{r}
+```{r echo=TRUE, warning=FALSE, message=FALSE}
 jama_colors <- c('#374e55', '#df8f44', '#00a1d5', '#b24745')
 
 labels_desfechos <- list(
@@ -193,7 +191,7 @@ grafico_distribuicao <- function(df, col, labels_desfechos = list(), colors = ja
 }
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 grafico_distribuicao(
     dados,
     'Frutas',
@@ -202,7 +200,7 @@ grafico_distribuicao(
 
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 grafico_distribuicao(
     dados,
     'Legumes_Verduras',
@@ -211,7 +209,7 @@ grafico_distribuicao(
 
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 grafico_distribuicao(
     dados,
     'Bebidas_Alcoolicas',
@@ -220,7 +218,7 @@ grafico_distribuicao(
 
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 grafico_distribuicao(
     dados,
     'Produtos_Industrializados',
@@ -229,7 +227,7 @@ grafico_distribuicao(
 
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 grafico_distribuicao(
     dados,
     'Consumo_agua',
@@ -238,7 +236,7 @@ grafico_distribuicao(
 
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 grafico_distribuicao(
     dados,
     'Embutidos',

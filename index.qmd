@@ -1,28 +1,22 @@
 ---
 title: "Gabriel Miranda"
-subtitle: "Cientista de Dados | Universidade Federal Fluminense"
-image: Capa.png
+subtitle: "Data Scientist"
+#image: Capa.png
 about:
   template: trestles
   links:
     - icon: github
       text: GitHub
-      href: https://github.com/seu-usuario
+      href: https://github.com/gamiranda
     - icon: linkedin
       text: LinkedIn
-      href: https://linkedin.com/in/seu-perfil
+      href: https://linkedin.com/in/ga-miranda
     - icon: envelope
       text: Email
       href: mailto:gamiranda.ds@gmail.com
 ---
 
-### Projetos Em Destaque
+### Projetos
 
-* **[Análise Exploratória de Dados](https://link-do-seu-projeto-1.com)**
+* **[Projeto 1 - ECD Análise de Dados](https://link-do-seu-projeto-1.com)**
   Descrição rápida do que foi desenvolvido neste projeto e quais ferramentas foram utilizadas.
-
-* **[Modelo de Machine Learning](https://link-do-seu-projeto-2.com)**
-  Resumo sobre os dados analisados, algoritmos aplicados e resultados obtidos.
-
-* **[Dashboard Interativo](https://link-do-seu-projeto-3.com)**
-  Visualizações e relatórios construídos para tomada de decisão.

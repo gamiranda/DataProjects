@@ -1,2 +1,12 @@
 project:
+  type: website
   output-dir: docs
+
+website:
+  title: "Data Projects"
+
+format:
+  html:
+    theme: cosmo
+    css: custom.css
+    toc: false

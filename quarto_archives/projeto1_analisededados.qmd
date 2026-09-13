@@ -25,6 +25,101 @@ dados0 <- read_excel("DadosNutri.xlsx")
 theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",") 
 ```
 
+## Objetivos do estudo
+
+A base de dados tem como propósito investigar as mudanças nos hábitos alimentares durante a pandemia de COVID-19 e sua possível associação com características sociodemográficas, econômicas, antropométricas e relacionadas às condições vivenciadas durante o período.
+
+De forma específica, busca:
+
+-   Caracterizar o perfil sociodemográfico e antropométrico dos participantes, considerando gênero, raça/cor, região de residência, escolaridade, renda familiar, idade e IMC;
+-   Descrever as condições vivenciadas durante a pandemia, incluindo isolamento social, dificuldades financeiras e ocorrência de COVID-19;
+-   Identificar a ocorrência de alterações gerais na alimentação durante a pandemia;
+-   Examinar mudanças específicas no consumo alimentar, considerando aumento, redução ou manutenção do consumo de diferentes grupos de alimentos e bebidas;
+-   Investigar associações entre as mudanças nos hábitos alimentares e as características sociodemográficas, econômicas, antropométricas e relacionadas à pandemia;
+-   Compreender possíveis desigualdades nos impactos da pandemia sobre os hábitos alimentares dos participantes.
+
+## INTRODUÇÃO E CONTEXTUALIZAÇÃO
+
+Inicialmente, apresentem brevemente o contexto da base de dados e o problema que será investigado.
+
+Essa parte deve permitir que uma pessoa que não conhece previamente a base compreenda:
+
+-   de onde vieram os dados;
+-   quem são os indivíduos ou unidades analisadas;
+-   quando e como os dados foram coletados;
+-   qual é o contexto do estudo;
+-   qual será o foco da análise realizada.
+
+A contextualização deve ser breve e direcionada ao restante da apresentação.
+
+### OBJETIVOS DA ANÁLISE
+
+Apresentem de forma clara o objetivo geral da análise e, quando necessário, os objetivos específicos que orientarão a apresentação.
+
+Os objetivos deverão funcionar como um guia para a construção da narrativa.
+
+Evitem simplesmente reproduzir todos os objetivos sugeridos na descrição da base. Será possível selecionar e priorizar determinados aspectos, desde que consiga desenvolver uma análise coerente dentro do tempo disponível.
+
+### DADOS E VARIÁVEIS UTILIZADAS
+
+Apresentem brevemente a base de dados e indiquem quais variáveis foram selecionadas para a análise.
+
+Procurem distinguir, quando pertinente:
+
+-   variáveis desfecho;
+-   variáveis explicativas;
+-   variáveis qualitativas;
+-   variáveis quantitativas.
+
+Não é necessário apresentar detalhadamente todas as variáveis existentes na base. Destaquem principalmente aquelas que serão importantes para compreender os resultados apresentados posteriormente.
+
+Tabelas compactas, esquemas ou outros recursos visuais podem ser utilizados para facilitar essa apresentação.
+
+### RESULTADOS
+
+Esta deverá ser a parte principal da apresentação.
+
+Os resultados deverão ser organizados de maneira lógica e conectados aos objetivos definidos anteriormente.
+
+Utilizem adequadamente os recursos estudados na disciplina, incluindo:
+
+-   tabelas automáticas;
+-   gráficos estatísticos estáticos;
+-   medidas descritivas, quando pertinentes;
+-   comparações entre grupos;
+-   cruzamentos entre variáveis;
+-   outros recursos de análise exploratória que contribuam para a investigação.
+
+### PRINCIPAIS ACHADOS
+
+Ao final da apresentação, sintetizem os principais resultados encontrados.
+
+Em vez de simplesmente repetir números apresentados anteriormente, procurem responder:
+
+O que aprendemos com esses dados?
+
+Destaquem os padrões, diferenças ou associações que considerarem mais relevantes para os objetivos estabelecidos.
+
+Quando pertinente, também poderão ser mencionadas limitações importantes dos dados ou da análise realizada.
+
+### ORGANIZAÇÃO E COMUNICAÇÃO
+
+A qualidade do projeto não será avaliada apenas pela quantidade de técnicas utilizadas.
+
+Será considerada especialmente a capacidade do grupo de:
+
+-   selecionar informações relevantes;
+-   construir uma narrativa coerente;
+-   utilizar adequadamente tabelas e gráficos;
+-   interpretar corretamente os resultados;
+-   comunicar os achados de maneira clara;
+-   produzir uma apresentação visualmente organizada;
+-   respeitar o limite de 15 minutos.
+
+A apresentação deverá ser planejada para o público, e não apenas como uma demonstração dos códigos desenvolvidos.
+
+Não é necessário exibir códigos extensos durante a apresentação. O código deverá estar incorporado ao documento Quarto e ser utilizado para garantir a reprodutibilidade da análise.
+
 ```{r echo=TRUE, warning=FALSE, message=FALSE}
 explicativas = c(
      'Genero'

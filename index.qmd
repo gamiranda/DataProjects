@@ -16,7 +16,7 @@ about:
       href: mailto:gamiranda.ds@gmail.com
 ---
 
-### Projetos
+### Projects
 
 * **[Projeto 1 - ECD Análise de Dados](https://link-do-seu-projeto-1.com)**
-  Descrição rápida do que foi desenvolvido neste projeto e quais ferramentas foram utilizadas.
+  Projeto 1 da disciplina de Análise de Dados da ECD

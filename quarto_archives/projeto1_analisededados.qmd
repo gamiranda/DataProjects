@@ -1,5 +1,5 @@
 ---
-title: "Análise das alterações de hábitos alimentares durante a pandemia de COVID-19"
+title: "As mudanças de hábitos alimentares na pandemia foram para bons ou maus hábitos?"
 author: "Gabriel Miranda"
 format: 
   html:
@@ -20,10 +20,68 @@ library(knitr)
 library(stringr)
 library(gtsummary)
 
-dados0 <- read_excel("DadosNutri.xlsx")
+dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
 
 theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",") 
 ```
+
+\newpage
+
+# Introdução
+
+Em 2022, alunas do curso de pós-graduação em Nutrição da UFF coletam `r nrow(dados0)` respostas em um questionário online com `r ncol(dados0)` perguntas relacionadas a características sociodemográficas, condições vivenciadas durante a pandemia de COVID-19, características antropométricas e mudanças nos hábitos alimentares.
+
+O objetivo desse estudo é, a partir da base de dados coletada, responder a seguinte pergunta: As mudanças de hábito alimentares na pandemia foram para bons ou maus hábitos?
+
+# Dados e Variáveis Utilizadas
+
+
+
+
+
+
+
+O que será investigado:
+- As mudanças de hábito que ocorreram na pandemia 
+foram para bons ou maus hábitos?
+
+
+
+Introdução:
+
+- Descrever a origem dos dados
+-- periodo
+-- individuos analisados
+-- como e quando se deu a coleta dos dados
+- Descrever o contexto e foco da minha analise
+
+- Texto
+
+Dados e Variáveis Utilizadas:
+
+- Descrever o subuniverso que será utilizado
+- Descrever quais variáveis serão utilizadas para
+analisar o foco da analise
+
+- Texto e tabela com a descritiva
+
+Resultados:
+
+- Gráficos e tabelas para observar as mudanças de hábitos
+relatadas e a suas relações com caracteristicas 
+sociodemográficas.
+
+Principais Achados:
+
+- Principais destaques / resumo da parte de resultados.
+
+
+
+
+
+
+
+
 
 ## Objetivos do estudo
 
@@ -129,6 +187,7 @@ explicativas = c(
     ,'Escolaridade'
     ,'Trabalha'
     ,'Idade'
+    ,'Peso'
     ,'Dificuldade_Financeira'
 )
 desfechos = c(
@@ -137,8 +196,7 @@ desfechos = c(
     ,'Legumes_Verduras'
     ,'Bebidas_Alcoolicas'
     ,'Produtos_Industrializados'
-    ,'Consumo_agua'
-    ,'Embutidos'
+    ,'Doces'
 )
 ```
 
@@ -177,13 +235,44 @@ tbl_summary(
 
 ```
 
+
+Sobre a alteração de hábitos alimentares na pandemia:
+
+- A maior parte das variáveis apresenta p-valor menor do que 0.05, indicando que essas variáveis são importantes para explicar as mudanças de hábito na pandemia
+
+  - (Genero) As mulheres mudaram mais seus hábitos alimentares do que os homens.
+  - (Renda_familiar) Famílias com renda de até R$ 1254,00 apresentaram maior mudança de hábitos e famílias com renda maior do que R$8640,00 apresentaram uma maior proporção do preenchimento de 'Não mudança de hábito'.
+  - (Escolaridade) Altas escolaridades apresentaram maior proporção de não mudança de hábito e baixas escolaridades apresentaram maior proporção de mudança de hábito.
+  - (Trabalha)Quem não trabalha teve maior mudança de hábito.
+  - (Dificuldade_Financeira) Quem passou por dificuldade financeira apresentou maior mudança de hábito. Quem não passou por dificuldade financeira não passou por mudança de hábito.
+
 ### Filtrando somente que declarou alteração de hábito na pandemia e selecionando as variáveis
 
 Aqui vou supor que quem respondeu 'Alteracao_Pandemia = Não' deveria ter preenchido nas variáveis associadas 'Não alterou
 
 ```{r, echo=TRUE, warning=FALSE, message=FALSE}
-dados = dados0 %>% filter(Alteracao_Pandemia == "Sim")
+variaveis_estudo = c(desfechos, 'Genero', 'Renda_familiar','Escolaridade','Trabalha','Dificuldade_Financeira')
+
+dados = dados0 %>% 
+  filter(Alteracao_Pandemia == "Sim") %>%
+  select(all_of(variaveis_estudo))
 ```
+
+
+# Próximo passo: considerando quem mudou de hábito, essa mudança foi para bons hábitos ou maus hábitos? Qual a relação desses bons/maus hábitos com as variáveis da seção anterior? Exemplo: famílias de mais baixa renda passaram a consumir mais embutidos e industrializados? As mulheres que mudaram de hábito passaram a ter uma alimentação mais saudável? Pessoas que não trabalhavam passaram a consumir mais alcool? Etc.
+
+Resultados gerados abaixo:
+
+- Tabela descritiva das variáveis explicativas escolhidas - ok
+- Tabela descritiva das variáveis desfecho escolhidas - ok
+- Gráfico de barras das variáveis desfecho escolhidas - ok
+- Gráfico de barras 2 a 2 das variáveis explicativas e desfecho - ok
+- Criar cluster com as variáveis dos hábitos e analisar os clusters com as variáveis explicativas
+- Criação de um escore para avaliar individualmente se a alimentação da pessoa melhorou ou piorou e relacionar com as variáveis explicativas - ok
+
+  - Dar uma atenção na interpretação da variável Dificuldade_Financeira
+
+
 
 ## Caracterizar o perfil sociodemográfico
 
@@ -192,8 +281,7 @@ dados = dados0 %>% filter(Alteracao_Pandemia == "Sim")
 ```{r warning=FALSE, message=FALSE}
 table1 <- dados %>%
   select(
-    Genero, Raca_cor, Regiao, Renda_familiar,
-    Escolaridade, Trabalha, Idade, Dificuldade_Financeira
+    Genero, Renda_familiar, Escolaridade, Trabalha, Dificuldade_Financeira
   ) %>%
   tbl_summary(
     statistic = list(
@@ -206,12 +294,9 @@ table1 <- dados %>%
     ),
     label = list(
       Genero ~ "Gênero",
-      Raca_cor ~ "Raça/Cor",
-      Regiao ~ "Região",
       Renda_familiar ~ "Renda Familiar",
       Escolaridade ~ "Escolaridade",
       Trabalha ~ "Trabalha",
-      Idade ~ "Idade",
       Dificuldade_Financeira ~ "Dificuldade Financeira"
     ),
     missing = "no"
@@ -225,7 +310,7 @@ table1
 table2 <- dados %>%
   select(
     Frutas, Legumes_Verduras, Bebidas_Alcoolicas,
-    Produtos_Industrializados, Consumo_agua, Embutidos
+    Produtos_Industrializados, Doces
   ) %>%
   tbl_summary(
     statistic = all_categorical() ~ "{n} ({p}%)",
@@ -235,8 +320,7 @@ table2 <- dados %>%
       Legumes_Verduras ~ "Legumes e Verduras",
       Bebidas_Alcoolicas ~ "Bebidas Alcoólicas",
       Produtos_Industrializados ~ "Produtos Industrializados",
-      Consumo_agua ~ "Consumo de Água",
-      Embutidos ~ "Embutidos"
+      Doces ~ "Doces"
     ),
     missing = "no"
   ) %>%
@@ -326,17 +410,309 @@ grafico_distribuicao(
 ```{r warning=FALSE, message=FALSE}
 grafico_distribuicao(
     dados,
-    'Consumo_agua',
+    'Doces',
     labels_desfechos
 )
 
 ```
 
-```{r warning=FALSE, message=FALSE}
-grafico_distribuicao(
-    dados,
-    'Embutidos',
-    labels_desfechos
+
+
+
+```{r}
+library(webr)           
+
+PieDonut(data=dados,
+          mapping=aes(pies=Renda_familiar,
+                  donut = Bebidas_Alcoolicas),
+          r0=0.4,
+          showPieName = F,
+          pieLabelSize = 4)
+```
+
+- Podemos observar que quanto maior a renda, maior foi o aumento no consumo de alcool
+
+
+```{r}
+library(ggstats)
+
+ggplot(dados, aes(x = Genero, fill = Doces, by= Genero)) +
+  geom_bar(position = "fill") +
+  geom_text(stat = "prop", position = position_fill(.5)) +
+  scale_fill_brewer(name="Satisfação com a\nocomida e bebida",palette = "Dark2")+
+  scale_y_continuous(labels = scales::percent) +
+  xlab("Gênero")+
+  ylab("Proporção relativa (%)") +
+  theme_bw()+
+  theme(text = element_text(size = 14))
+```
+
+
+```{r}
+library(tidyverse)
+
+explicativas <- c('Genero', 'Renda_familiar', 'Escolaridade', 'Trabalha', 'Dificuldade_Financeira')
+desfechos    <- c('Frutas', 'Legumes_Verduras', 'Bebidas_Alcoolicas', 'Produtos_Industrializados', 'Doces')
+
+resultados <- expand.grid(Explicativa = explicativas, Desfecho = desfechos, stringsAsFactors = FALSE) %>%
+  rowwise() %>%
+  mutate(
+    p_valor = round(chisq.test(table(dados[[Explicativa]], dados[[Desfecho]]))$p.value, 5)
+  ) %>%
+  ungroup() %>%
+  arrange(p_valor)
+
+kable(resultados)
+```
+
+# Gráficos 2 a 2
+
+```{r}
+library(ggstats)
+
+# Filtrar relações significativas e ordenar pela sequência da lista 'explicativas'
+relacoes_significativas <- resultados %>%
+  #filter(p_valor < 0.05) %>%
+  mutate(Explicativa = factor(Explicativa, levels = explicativas)) %>%
+  arrange(Explicativa, p_valor) # Ordena por Explicativa e depois pelo p-valor dentro de cada grupo
+
+# Função para criar o gráfico padronizado
+plot_bivariado <- function(exp, desf) {
+  exp <- as.character(exp)
+  
+  ggplot(dados, aes(x = .data[[exp]], fill = .data[[desf]], by = .data[[exp]])) +
+    geom_bar(position = "fill") +
+    geom_text(stat = "prop", position = position_fill(0.5), size = 3.5) +
+    scale_fill_brewer(palette = "Set2", name = desf) +
+    scale_y_continuous(labels = scales::percent) +
+    labs(
+      title = paste(desf, "por", exp),
+      x = exp,
+      y = "Proporção (%)"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+# Gerar lista com os gráficos significativos ordenados
+graficos <- map2(relacoes_significativas$Explicativa, 
+                 relacoes_significativas$Desfecho, 
+                 plot_bivariado)
+```
+
+
+
+```{r}
+for(i in 1:length(graficos)){
+  print(graficos[[i]])
+}
+```
+
+
+
+
+```{r}
+calcular_escore_alimentar <- function(dados,
+                                      cols_saudaveis = c("Frutas", "Legumes_Verduras"),
+                                      cols_nao_saudaveis = c("Bebidas_Alcoolicas", "Produtos_Industrializados", "Doces"),
+                                      rotulo_aumentou = "Aumentou",
+                                      rotulo_diminuiu = "Diminuiu",
+                                      rotulos_sem_mudanca = c("Não alterou", "Não tenho o hábito")) {
+  
+  dados_proc <- dados
+  
+  # Mapeamento para alimentos saudáveis (+1 aumento, -1 redução, 0 sem mudança)
+  pontuar_saudavel <- function(x) {
+    ifelse(x == rotulo_aumentou, 1,
+    ifelse(x == rotulo_diminuiu, -1,
+    ifelse(x %in% rotulos_sem_mudanca, 0, NA)))
+  }
+  
+  # Mapeamento para alimentos não saudáveis (-1 aumento, +1 redução, 0 sem mudança)
+  pontuar_nao_saudavel <- function(x) {
+    ifelse(x == rotulo_aumentou, -1,
+    ifelse(x == rotulo_diminuiu, 1,
+    ifelse(x %in% rotulos_sem_mudanca, 0, NA)))
+  }
+  
+  # Aplica a pontuação coluna por coluna
+  matriz_saudavel <- sapply(dados_proc[, cols_saudaveis, drop = FALSE], pontuar_saudavel)
+  matriz_nao_saudavel <- sapply(dados_proc[, cols_nao_saudaveis, drop = FALSE], pontuar_nao_saudavel)
+  
+  # Calcula a soma das pontuações por indivíduo
+  dados_proc$Escore_Continuo <- rowSums(cbind(matriz_saudavel, matriz_nao_saudavel), na.rm = TRUE)
+  
+  # Cria a variável categórica para a Regressão Logística
+  dados_proc$Escore_Categoria <- factor(
+    ifelse(dados_proc$Escore_Continuo > 0, "Melhorou",
+    ifelse(dados_proc$Escore_Continuo < 0, "Piorou", "Manteve")),
+    levels = c("Piorou", "Manteve", "Melhorou"),
+    ordered = TRUE
+  )
+  
+  return(dados_proc)
+}
+
+# ------------------------------------------------------------------------------
+# EXEMPLO DE USO 1:
+# ------------------------------------------------------------------------------
+dados <- calcular_escore_alimentar(dados)
+table(dados$Escore_Categoria) # Exibe contagem dos grupos
+```
+
+
+
+
+```{r}
+ajustar_regressao_multivariada <- function(dados,
+                                           var_resposta = "Escore_Categoria",
+                                           preditores = c("Genero", "Renda_familiar", "Escolaridade", "Trabalha", "Dificuldade_Financeira")) {
+  
+  # Instala e carrega o pacote MASS se necessário
+  if (!requireNamespace("MASS", quietly = TRUE)) install.packages("MASS")
+  
+  # Garantir que a variável dependente é um fator ordenado
+  dados[[var_resposta]] <- factor(dados[[var_resposta]], levels = c("Piorou", "Manteve", "Melhorou"), ordered = TRUE)
+  
+  # Garantir que os preditores categóricos sejam fatores
+  for (p in preditores) {
+    if (is.character(dados[[p]])) {
+      dados[[p]] <- as.factor(dados[[p]])
+    }
+  }
+  
+  # Monta a fórmula dinamicamente
+  formula_modelo <- as.formula(paste(var_resposta, "~", paste(preditores, collapse = " + ")))
+  
+  # Ajusta o modelo Proportional Odds Logistic Regression (polr)
+  modelo <- MASS::polr(formula_modelo, data = dados, Hess = TRUE)
+  
+  # Extração dos parâmetros
+  sumario <- summary(modelo)
+  n_coef <- length(coef(modelo))
+  
+  # Nomes dos coeficientes dos preditores (exclui os interceptos/pontos de corte)
+  nomes_coef <- names(coef(modelo))
+  
+  # Cálculo dos p-valores baseados na distribuição normal (Wald test)
+  t_values <- sumario$coefficients[nomes_coef, "t value"]
+  p_valores <- 2 * (1 - pnorm(abs(t_values)))
+  
+  # Cálculo das Razões de Chances (OR = exp(beta)) e Intervalos de Confiança 95%
+  or <- exp(coef(modelo))
+  ci <- exp(confint.default(modelo)[nomes_coef, , drop = FALSE])
+  
+  # Tabela final consolidada
+  tabela_or <- data.frame(
+    Variavel = nomes_coef,
+    Odds_Ratio = round(or, 3),
+    IC_95_Inf = round(ci[, 1], 3),
+    IC_95_Sup = round(ci[, 2], 3),
+    p_valor = round(p_valores, 4)
+  )
+  
+  rownames(tabela_or) <- NULL
+  
+  return(list(
+    modelo_fit = modelo,
+    tabela_resultados = tabela_or
+  ))
+}
+
+# ------------------------------------------------------------------------------
+# EXEMPLO DE USO 2:
+# ------------------------------------------------------------------------------
+# # 1. Garanta que calculou o escore primeiro:
+# meudados <- calcular_escore_alimentar(dados)
+#
+# # 2. Execute a regressão multivariada:
+resultado_regressao <- ajustar_regressao_multivariada(dados)
+#
+# # 3. Visualize a tabela de Odds Ratios:
+print(resultado_regressao$tabela_resultados)
+```
+
+
+
+
+
+```{r}
+dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
+
+dados = dados0 %>% 
+  filter(Alteracao_Pandemia == "Sim")
+
+
+# 1. Carregar os pacotes
+library(tidymodels)
+library(tidyclust) # Extensão do tidymodels para clusterização
+
+set.seed(2026)
+# 2. Dados de exemplo (removendo a variável categórica do dataset iris)
+dados_clust <- dados %>%
+  select(Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Produtos_Industrializados, Doces) %>%
+  mutate(across(everything(), ~ case_when(
+    . == "Não tenho o hábito" ~ 0,
+    . == "Diminuiu"           ~ 1,
+    . == "Não alterou"        ~ 2,
+    . == "Aumentou"           ~ 3,
+    TRUE                      ~ NA_real_
+  )))
+
+# 3. Criar a receita de pré-processamento (K-Means exige variáveis normalizadas)
+rec_kmeans <- recipe(~ ., data = dados_clust) %>%
+  step_normalize(all_numeric_predictors())
+
+# 4. Especificar o modelo KMeans (ex: k = 3 clusters)
+spec_kmeans <- k_means(num_clusters = 3) %>%
+  set_engine("stats")
+
+# 5. Criar o Workflow e ajustar o modelo
+wf_kmeans <- workflow() %>%
+  add_recipe(rec_kmeans) %>%
+  add_model(spec_kmeans)
+
+fit_kmeans <- wf_kmeans %>% fit(data = dados_clust)
+
+# 6. Extrair resultados e atribuições de clusters
+# Adiciona a coluna com a atribuição do cluster a cada observação
+dados_com_clusters <- augment(fit_kmeans, new_data = dados_clust)
+head(dados_com_clusters)
+
+# Visualizar os centroides de cada cluster (nas escalas normalizadas)
+extract_centroids(fit_kmeans)
+
+
+dados = dados %>%
+  bind_cols(dados_com_clusters %>% select(.pred_cluster))
+
+tbl_summary(
+    data = dados #%>%
+      #select(all_of(c('Genero', 'Renda_familiar','Escolaridade','Trabalha','Dificuldade_Financeira')), .pred_cluster)
+    ,
+    by = ".pred_cluster",
+    statistic = list(all_categorical() ~ "{n} ({p}%)",
+                     all_continuous() ~ "{mean} ({sd})")              
 )
+
+
+
+cluster 1: (aumentou o consumo de todo dia de alimento)
+  Aumentou: Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Doces
+  Não alterou: Produtos_Industrializados
+  Diminuiu: 
+
+cluster 2: (aumentou o consumo de alimentos não-saudáveis)
+  Aumentou: Bebidas_Alcoolicas, Produtos_Industrializados, Doces
+  Não alterou: 
+  Diminuiu: Frutas, Legumes_Verduras
+
+cluster 3: (aumentou o consumo de alimentos saudáveis)
+  Aumentou: Frutas, Legumes_Verduras
+  Não alterou: 
+  Diminuiu: Bebidas_Alcoolicas, Produtos_Industrializados, Doces
+
+Próximo passo: analisar as variáveis explicativas de cada cluster
+
 
 ```

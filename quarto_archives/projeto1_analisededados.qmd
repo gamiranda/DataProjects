@@ -372,11 +372,10 @@ for(i in 1:length(graficos)){
 
 # Clusterização 
 
-Nessa seção foi aplicada a técnica de K-Means pra clusterização dos dados, onde foi possível identificar três grupos:
+Nessa seção foi aplicada a técnica de K-Means pra clusterização dos dados, onde foi possível identificar dois grupos:
 
 - Mudanças para bons hábitos
 - Mudanças para maus hábitos
-- Mudança generalizada
 
 ```{r}
 # 1. Carregar os pacotes
@@ -451,36 +450,28 @@ tbl_summary(
   modify_caption("Descritiva das variáveis explicativas para os Clusters")
 ```
 
-Ou seja, podemos separar os respondentes dos questionários em 3 grupos:
+Ou seja, podemos separar os respondentes dos questionários em 2 grupos:
 
-- Os que aumentaram o consumo de todo tipo de alimento: 
+- Os que aumentaram o consumo de alimentos saudáveis (cluster 1):
   
-  - Aumentou: Frutas, Legumes/Verduras, Bebidas Alcoolicas, Doces
-  - Não alterou: Produtos Industrializados
+  - Aumentou: Frutas, Legumes/Verduras
+  - Diminuiu/Não tenho o hábito: Bebidas Alcoolicas, Produtos Industrializados
 
-  - Maior proporção de renda familiar acima de R$ 8640; 
-  - Maior proporção de pós graduados; 
-  - Menor proporção de não trabalha; 
-  - Menor proporção de dificuldade financeira
+  - Maior proporção na faixa de alta renda;
+  - Maior proporção de pós graduados;
+  - Menor proporção de não-trabalho;
+  - Menor proporção de dificuldade financeira;
+  - Idades mais dispersa (p25 = 22 e p75 = 42)
 
-- Os que aumentaram o consumo de alimentos não-saudáveis:
+- Os que aumentaram o consumo de alimentos não-saudáveis (cluster 2):
   
   - Aumentou: Bebidas Alcoolicas, Produtos Industrializados, Doces
   - Diminuiu: Frutas, Legumes/Verduras
 
   - Menor proporção na faixa de alta renda;
-  - Maior proporção de dificuldade financeira.
-  - Idades mais concentradas (p25 = 22 e p75 = 37)
-
-- Os que aumentaram o consumo de alimentos não-saudáveis:
-  
-  - Aumentou: Frutas, Legumes/Verduras
-  - Diminuiu: Bebidas Alcoolicas, Produtos Industrializados, Doces
-
-  - Menor proporção na faixa de alta renda;
-  - Maior proporção de não-trabalho;
-  - Maior proporção de dificuldade financeira.
-  - Idades mais dispersa (p25 = 21 e p75 = 44)
+  - Maior proporção de fundamental e médio completo;
+  - Maior proporção de dificuldade financeira;
+  - Idades mais concentradas (p25 = 21 e p75 = 37)
 
 
 # Principais Achados
@@ -507,9 +498,13 @@ Ou seja, podemos observar o seguinte recorte em quem reportou mudança de hábit
 Pudemos observar um aumento no consumo de todos os alimentos selecionados, com destaque para Doces, onde mais de 50% relataram aumento no seu consumo.
 
 O consumo de bebidas alcoolicas, frutas, legumes/verduras aumentou conforme aumentava a escolaridade do respondente. Além disso, a maior proporção de 'Não tenho hábito' no consumode de produtos industrializados foi nos respondentes pós graduados.
+
 O consumo de bebidas alcoolicas, produtos industrializados e doces foi menor dentre as pessoas que trabalham.
+
 O consumo de todos os alimentos selecionados diminuiu dentre que passou por dificuldades financeiras.
+
 O consumo de todos os alimentos selecionados, exceto produtos industrializados, aumentou dentre as pessoas de maior renda familiar (mais de R$ 8640,00).
+
 Já a distribuição das idades foi bem similar para cada categoria de consumo alimentar listada.
 
 
@@ -519,30 +514,23 @@ O complemento dessas análises foi feito via clusterização.
 
 Via clusterização foi possível identificar três grupos:
 
-- Mudança generalizada
-- Mudanças para maus hábitos
 - Mudanças para bons hábitos
+- Mudanças para maus hábitos
 
-**Mudança generalizada**
+**Mudanças para bons hábitos**
 
-Aumentou o consumo de de frutas, legumes/verduras, bebidas alcoolicas e doces. Enquanto não alterou o consumo de produtos industrializados.
+Aumentou o consumo de frutas e legumes/verduras. Enquanto diminuiu ou não alterou o consumo de de bebidas alcoolicas, produtos industrializados.
 
-Esse grupo é caracterizado por maior proporção de alta renda familiar e pós graduados, e menor proporção de não trabalha dificuldade financeira na pandemia.
+Esse grupo é caracterizado por uma maior proporção de alta renda familiar e pós graduados, e menor proporção de não-trabalho e de dificuldade financeira. Além disso, uma população mais velha, com percentil 75 em 42 anos.
 
 **Mudanças para maus hábitos**
 
 Aumentou o consumo de bebidas alcoolicas, produtos industrializados e doces. Enquanto diminuiu o consumo de frutas e legumes/verduras
 
-Esse grupo é caracterizado por uma menor proporção de alta renda familiar, maior proporção de dificuldade financeira na pandemia e possui as idades mais concentradas com percentil 25 em 22 e percentil 75 em 37.
-
-**Mudanças para bons hábitos**
-
-Aumentou o consumo de frutas e legumes/verduras. Enquanto diminuiu o consumode de bebidas alcoolicas, produtos industrializados e doces.
-
-Esse grupo é caracterizado por uma menor proporção de alta renda familiar, maior proporção de não-trabalho e maior proporção de dificuldade financeira. Além disso, as idades mais dispersa com percentil 25 em 21 e percentil 75 em 44.
+Esse grupo é caracterizado por uma menor proporção de alta renda familiar, maior proporção de dificuldade financeira na pandemia e maior proporção de ensino fundamental e médio completo. Além disso, uma população mais nova, com percentil 75 em 37 anos.
 
 
-Podemos observar que foi possível identificar um grupo que mudou para bons hábitos e outro que mudou para maus hábitos.
+Pudemos observar que, pelos dados, foi possível identificar um grupo que mudou para bons hábitos e outro que mudou para maus hábitos. E essas diferenças podem estar relacionadas a um recorte social, uma vez que ficam claras as diferenças entre os dois grupos.
 
 
 # Apendice

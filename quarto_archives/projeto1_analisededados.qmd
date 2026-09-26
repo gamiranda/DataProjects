@@ -23,6 +23,12 @@ library(tidyr)
 library(knitr)
 library(stringr)
 library(gtsummary)
+library(tidyverse)
+library(ggstats)
+library(ggridges)
+library(tidymodels)
+library(tidyclust) 
+#library(MASS)
 
 dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
 
@@ -92,9 +98,7 @@ tbl_summary(
     pvalue_fun = ~ style_pvalue(.x, digits = 3)
   )
 
-
 ```
-
 
 Sobre a alteração de hábitos alimentares na pandemia:
 
@@ -167,9 +171,6 @@ Dentre as opções disponíveis no questionário, foram selecionadas as seguinte
 - Doces
 
 ```{r warning=FALSE, message=FALSE}
-# teste de aderencia dentro das variáveis para verificar 
-# se as diferenças entre as categorias são significativas estatisticamente
-
 p_aderencia <- function(data, variable, ...) {
   res <- chisq.test(table(data[[variable]]))
   tibble::tibble(p.value = style_pvalue(res$p.value, digits = 3))
@@ -192,7 +193,7 @@ table2 <- dados %>%
     ),
     missing = "no"   
   ) %>%
-    add_stat(fns = everything() ~ p_aderencia) %>% # <--- Adiciona o teste customizado
+    add_stat(fns = everything() ~ p_aderencia) %>% 
   modify_header(p.value ~ "**Valor-p**") %>%
   modify_caption("Proporção das categorias nas variáveis desfecho") %>%  
   bold_labels()
@@ -255,8 +256,6 @@ for(i in 1:length( desfechos[2:length(desfechos)])){
 ```
 
 ```{r}
-library(tidyverse)
-
 explicativas <- c('Genero', 'Renda_familiar', 'Escolaridade', 'Trabalha', 'Dificuldade_Financeira')
 desfechos    <- c('Frutas', 'Legumes_Verduras', 'Bebidas_Alcoolicas', 'Produtos_Industrializados', 'Doces')
 
@@ -279,15 +278,11 @@ caption = "Associação entre variável Explicativa com os alimentos selecionado
 ## Quantitativas x Quantitativa
 
 ```{r}
-library(ggstats)
-
-# Filtrar relações significativas e ordenar pela sequência da lista 'explicativas'
 relacoes_significativas <- resultados %>%
   #filter(p_valor < 0.05) %>%
   mutate(Explicativa = factor(Explicativa, levels = explicativas)) %>%
   arrange(Explicativa, p_valor) # Ordena por Explicativa e depois pelo p-valor dentro de cada grupo
 
-# Função para criar o gráfico padronizado
 plot_bivariado <- function(exp, desf) {
   exp <- as.character(exp)
   
@@ -307,7 +302,6 @@ plot_bivariado <- function(exp, desf) {
   
 }
 
-# Gerar lista com os gráficos significativos ordenados
 graficos <- map2(relacoes_significativas$Explicativa, 
                  relacoes_significativas$Desfecho, 
                  plot_bivariado)
@@ -322,8 +316,6 @@ for(i in 1:length(graficos)){
 ## Qualitativa x Quantitativas
 
 ```{r}
-library(ggridges)
-
 variaveis = tibble(
   Quantitativa = rep("Idade", 5),
   Qualitativa = c('Frutas', 'Legumes_Verduras', 'Bebidas_Alcoolicas', 'Produtos_Industrializados', 'Doces')
@@ -355,7 +347,6 @@ plot_bivariado <- function(exp, desf) {
     theme_minimal()
 }
 
-# Gerar lista com os gráficos significativos ordenados
 graficos <- map2(variaveis$Quantitativa, 
                  variaveis$Qualitativa, 
                  plot_bivariado)
@@ -368,8 +359,6 @@ for(i in 1:length(graficos)){
 ```
 
 
-
-
 # Clusterização 
 
 Nessa seção foi aplicada a técnica de K-Means pra clusterização dos dados, onde foi possível identificar dois grupos:
@@ -378,12 +367,7 @@ Nessa seção foi aplicada a técnica de K-Means pra clusterização dos dados, 
 - Mudanças para maus hábitos
 
 ```{r}
-# 1. Carregar os pacotes
-library(tidymodels)
-library(tidyclust) # Extensão do tidymodels para clusterização
-
 set.seed(2026)
-# 2. Dados de exemplo (removendo a variável categórica do dataset iris)
 dados_clust <- dados %>%
   select(Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Produtos_Industrializados, Doces) %>%
   mutate(across(everything(), ~ case_when(
@@ -394,28 +378,19 @@ dados_clust <- dados %>%
     TRUE                      ~ NA_real_
   )))
 
-# 3. Criar a receita de pré-processamento (K-Means exige variáveis normalizadas)
 rec_kmeans <- recipe(~ ., data = dados_clust) %>%
   step_normalize(all_numeric_predictors())
 
 spec_kmeans <- k_means(num_clusters = 2) %>%
   set_engine("stats")
 
-# 5. Criar o Workflow e ajustar o modelo
 wf_kmeans <- workflow() %>%
   add_recipe(rec_kmeans) %>%
   add_model(spec_kmeans)
 
 fit_kmeans <- wf_kmeans %>% fit(data = dados_clust)
 
-# 6. Extrair resultados e atribuições de clusters
-# Adiciona a coluna com a atribuição do cluster a cada observação
 dados_com_clusters <- augment(fit_kmeans, new_data = dados_clust)
-# head(dados_com_clusters)
-
-# Visualizar os centroides de cada cluster (nas escalas normalizadas)
-# extract_centroids(fit_kmeans)
-
 
 dadosc = dados %>%
   bind_cols(dados_com_clusters %>% select(.pred_cluster))
@@ -497,7 +472,7 @@ Ou seja, podemos observar o seguinte recorte em quem reportou mudança de hábit
 
 Pudemos observar um aumento no consumo de todos os alimentos selecionados, com destaque para Doces, onde mais de 50% relataram aumento no seu consumo.
 
-O consumo de bebidas alcoolicas, frutas, legumes/verduras aumentou conforme aumentava a escolaridade do respondente. Além disso, a maior proporção de 'Não tenho hábito' no consumode de produtos industrializados foi nos respondentes pós graduados.
+O consumo de bebidas alcoolicas, frutas, legumes/verduras aumentou conforme aumentava a escolaridade do respondente. Além disso, a maior proporção de 'Não tenho hábito' no consumo de de produtos industrializados foi nos respondentes pós graduados.
 
 O consumo de bebidas alcoolicas, produtos industrializados e doces foi menor dentre as pessoas que trabalham.
 
@@ -532,6 +507,7 @@ Esse grupo é caracterizado por uma menor proporção de alta renda familiar, ma
 
 Pudemos observar que, pelos dados, foi possível identificar um grupo que mudou para bons hábitos e outro que mudou para maus hábitos. E essas diferenças podem estar relacionadas a um recorte social, uma vez que ficam claras as diferenças entre os dois grupos.
 
+No começo da análise pudemos ver que quem não relatou mudanda de hábito durante a pandemia tem um perfil demográfico similar ao de quem relatou mudança para bons hábitos.
 
 # Apendice
 
@@ -555,28 +531,23 @@ calcular_escore_alimentar <- function(dados,
   
   dados_proc <- dados
   
-  # Para alimentos saudáveis (+1 aumento, -1 redução, 0 sem mudança)
   pontuar_saudavel <- function(x) {
     ifelse(x == rotulo_aumentou, 1,
     ifelse(x == rotulo_diminuiu, -1,
     ifelse(x %in% rotulos_sem_mudanca, 0, NA)))
   }
   
-  # Para alimentos não saudáveis (-1 aumento, +1 redução, 0 sem mudança)
   pontuar_nao_saudavel <- function(x) {
     ifelse(x == rotulo_aumentou, -1,
     ifelse(x == rotulo_diminuiu, 1,
     ifelse(x %in% rotulos_sem_mudanca, 0, NA)))
   }
   
-  # Aplica a pontuação coluna por coluna
   matriz_saudavel <- sapply(dados_proc[, cols_saudaveis, drop = FALSE], pontuar_saudavel)
   matriz_nao_saudavel <- sapply(dados_proc[, cols_nao_saudaveis, drop = FALSE], pontuar_nao_saudavel)
   
-  # Calcula a soma das pontuações por indivíduo
   dados_proc$Escore_Continuo <- rowSums(cbind(matriz_saudavel, matriz_nao_saudavel), na.rm = TRUE)
   
-  # Cria a variável categórica para a Regressão Logística
   dados_proc$Escore_Categoria <- factor(
     ifelse(dados_proc$Escore_Continuo > 0, "Melhorou",
     ifelse(dados_proc$Escore_Continuo < 0, "Piorou", "Manteve")),
@@ -587,9 +558,6 @@ calcular_escore_alimentar <- function(dados,
   return(dados_proc)
 }
 
-# ------------------------------------------------------------------------------
-# EXEMPLO DE USO 1:
-# ------------------------------------------------------------------------------
 dados <- calcular_escore_alimentar(dados)
 kable(table(dados$Escore_Categoria),
       caption = "Contagem nos grupos do escore alimentar",
@@ -599,45 +567,36 @@ kable(table(dados$Escore_Categoria),
 Na tabela abaixo podemos ver que todos os valores-p são altos e, consequentemente, os intervalos de confiança das odds-ratio contêm o 1. 
 
 ```{r}
+
 ajustar_regressao_multivariada <- function(dados,
                                            var_resposta = "Escore_Categoria",
                                            preditores = c("Genero", "Renda_familiar", "Escolaridade", "Trabalha", "Dificuldade_Financeira")) {
   
-  # Instala e carrega o pacote MASS se necessário
   if (!requireNamespace("MASS", quietly = TRUE)) install.packages("MASS")
   
-  # Garantir que a variável dependente é um fator ordenado
   dados[[var_resposta]] <- factor(dados[[var_resposta]], levels = c("Piorou", "Manteve", "Melhorou"), ordered = TRUE)
   
-  # Garantir que os preditores categóricos sejam fatores
   for (p in preditores) {
     if (is.character(dados[[p]])) {
       dados[[p]] <- as.factor(dados[[p]])
     }
   }
   
-  # Monta a fórmula dinamicamente
   formula_modelo <- as.formula(paste(var_resposta, "~", paste(preditores, collapse = " + ")))
   
-  # Ajusta o modelo Proportional Odds Logistic Regression (polr)
   modelo <- MASS::polr(formula_modelo, data = dados, Hess = TRUE)
   
-  # Extração dos parâmetros
   sumario <- summary(modelo)
   n_coef <- length(coef(modelo))
   
-  # Nomes dos coeficientes dos preditores (exclui os interceptos/pontos de corte)
   nomes_coef <- names(coef(modelo))
-  
-  # Cálculo dos p-valores baseados na distribuição normal (Wald test)
+
   t_values <- sumario$coefficients[nomes_coef, "t value"]
   p_valores <- 2 * (1 - pnorm(abs(t_values)))
   
-  # Cálculo das Razões de Chances (OR = exp(beta)) e Intervalos de Confiança 95%
   or <- exp(coef(modelo))
   ci <- exp(confint.default(modelo)[nomes_coef, , drop = FALSE])
   
-  # Tabela final consolidada
   tabela_or <- data.frame(
     Variavel = nomes_coef,
     Odds_Ratio = round(or, 3),
@@ -654,10 +613,8 @@ ajustar_regressao_multivariada <- function(dados,
   ))
 }
 
-# # 2. Execute a regressão multivariada:
 resultado_regressao <- ajustar_regressao_multivariada(dados)
-#
-# # 3. Visualize a tabela de Odds Ratios:
+
 kable(resultado_regressao$tabela_resultados, 
       caption = "Odds - Ratio para o escore alimentar",
       col.names = c("Variáveis", "Odds Ratio", "IC 95% sup", "IC 95% inf", "valor p"))

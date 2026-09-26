@@ -1,0 +1,439 @@
+---
+title: "As mudanças de hábitos alimentares na pandemia foram para bons ou maus hábitos?"
+author: "Gabriel Miranda"
+format:
+  revealjs:
+    css: custom.css
+    slide-number: true
+    incremental: false
+    transition: slide
+    background-transition: fade
+    auto-stretch: false
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggstats)
+library(tidyverse)
+library(knitr)
+#library(stringr)
+library(gtsummary)
+library(patchwork)
+library(gt)
+
+dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
+
+theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",")
+jama_colors <- c('#374e55', '#df8f44', '#00a1d5', '#b24745')
+
+explicativas <- c(
+  'Genero', 'Raca_cor', 'Regiao', 'Renda_familiar',
+  'Escolaridade', 'Trabalha', 'Idade', 'Peso', 'Dificuldade_Financeira'
+)
+desfechos <- c(
+  'Alteracao_Pandemia', 'Frutas', 'Legumes_Verduras',
+  'Bebidas_Alcoolicas', 'Produtos_Industrializados', 'Doces'
+)
+
+dados0 <- dados0 %>%
+  select(all_of(explicativas), all_of(desfechos))
+
+variaveis_estudo <- c(
+  desfechos, 'Genero', 'Renda_familiar',
+  'Escolaridade', 'Trabalha', 'Idade', 'Dificuldade_Financeira'
+)
+
+dados <- dados0 %>%
+  filter(Alteracao_Pandemia == "Sim") %>%
+  select(all_of(variaveis_estudo))
+
+labels_desfechos <- list(
+  Frutas = "Frutas",
+  Legumes_Verduras = "Legumes e Verduras",
+  Bebidas_Alcoolicas = "Bebidas Alcoólicas",
+  Produtos_Industrializados = "Produtos Industrializados",
+  Doces = "Doces"
+)
+```
+
+
+## **INTRODUÇÃO E CONTEXTUALIZAÇÃO**
+
+### Coleta e Origem
+Dados coletados em 2022 por alunas da pós-graduação em Nutrição da Universidade Federal Fluminense (UFF).
+
+### Amostra Coletada
+Questionário online composto por 2.359 indivíduos e 15 variáveis sociodemográficas e comportamentais.
+
+### Foco da Análise
+Identificar quem alterou a alimentação na pandemia e a direção dessa alteração (hábitos saudáveis vs não saudáveis).
+
+
+## **OBJETIVOS DA ANÁLISE**
+
+### Perfil de mudança
+Mapear características sociodemográficas associadas ao relato de alteração nos hábitos alimentares.
+
+### Variação dos Grupos
+Avaliar os padrões de consumo em determinados alimentos chave para se classificar a mudança de hábito.
+
+### Clusterização
+Agrupar os indivíduos via K-Means e correlacionar aos fatores socioeconômicos.
+
+
+## **DADOS E VARIÁVEIS UTILIZADAS**
+
+### Variáveis utilizadas:
+
+- Explicativas: Genero, Raca_cor, Regiao, Renda_familiar, Escolaridade, Trabalha, Idade, Peso e Dificuldade_Financeira.
+- Desfechos: Alteracao_Pandemia, Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Produtos_Industrializados e Doces.
+    - Bons hábitos: Frutas e Legumes_Verduras;
+    - Maus hábitos: Bebidas_Alcoolicas, Produtos_Industrializados e Doces.
+
+
+## **PACOTES UTILIZADOS**
+
+- readxl
+- dplyr
+- ggplot2
+- tidyr
+- knitr
+- stringr
+- gtsummary
+- tidyverse
+- ggstats
+- ggridges
+- tidymodels
+- tidyclust
+- MASS
+
+## **RESULTADOS**
+
+```{r warning=FALSE, message=FALSE}
+tbl_summary(
+    data = dados0 %>%
+      select(all_of(c('Genero', 'Renda_familiar', 'Escolaridade')), "Alteracao_Pandemia"),
+    by = "Alteracao_Pandemia",
+    statistic = list(all_categorical() ~ "{n} ({p}%)",
+                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+    label = list(
+        Genero ~ "Gênero",
+        Renda_familiar ~ "Renda Familiar",
+        Escolaridade ~ "Escolaridade"
+    )
+) %>%
+    modify_spanning_header(all_stat_cols() ~ "**Alteração de hábitos alimentares na pandemia**") %>%
+    modify_header(label ~ "**Variáveis**") %>%
+    bold_labels() %>%
+    # modify_caption("Descritiva das variáveis explicativas na amostra") %>%
+    modify_footnote(all_stat_cols() ~ "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP).") %>%
+  add_p(
+    test = list(all_categorical() ~ "chisq.test"),
+    pvalue_fun = ~ style_pvalue(.x, digits = 3)
+  )
+
+
+```
+
+
+## **RESULTADOS**
+
+```{r warning=FALSE, message=FALSE, fig.width=5, fig.height=4 ,}
+tbl_summary(
+    data = dados0 %>%
+      select(all_of(c('Trabalha', 'Idade', 'Dificuldade_Financeira')), "Alteracao_Pandemia"),
+    by = "Alteracao_Pandemia",
+    statistic = list(all_categorical() ~ "{n} ({p}%)",
+                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+    label = list(
+        Trabalha ~ "Trabalha",
+        Idade ~ "Idade (anos)",
+        Dificuldade_Financeira ~ "Dificuldade financeira"
+    )
+) %>%
+    modify_spanning_header(all_stat_cols() ~ "**Alteração de hábitos alimentares na pandemia**") %>%
+    modify_header(label ~ "**Variáveis**") %>%
+    bold_labels() %>%
+    # modify_caption("Descritiva das variáveis explicativas na amostra") %>%
+    modify_footnote(all_stat_cols() ~ "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP).") %>%
+  add_p(
+    test = list(all_categorical() ~ "chisq.test"),
+    pvalue_fun = ~ style_pvalue(.x, digits = 3)
+  )
+
+
+```
+
+
+## **RESULTADOS**
+
+#### Filtrando somente que declarou alteração de hábito na pandemia e selecionando as variáveis
+
+O objetivo do estudo é entender o perfil de quem mudou os hábitos alimentares durante a pandemia e verificar o sentido dessa mudança (bons ou maus hábito), então todas as visualizações a seguir levarão em consideração somente quem respondeu "Alteracao_Pandemia = Sim"
+
+
+## **RESULTADOS**
+
+#### Perfil sociodemográfico
+
+:::: columns
+
+::: {.column width="50%"}
+- `r nrow(dados)` das `r nrow(dados0)` pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia.
+:::
+
+::: {.column width="50%"}
+- Renda familiar entre R$ 1.255 - R$ 8.640
+- Ensino médio completo ou pós graduação
+- Trabalhavam durante a pandemia
+- Não passaram por dificuldades financeiras durante a pandemia
+:::
+
+::::
+
+## **RESULTADOS**
+
+#### Como se deu o consumo dos grupos alimentares
+
+:::: columns
+
+::: {.column width="33%"}
+```{r warning=FALSE, message=FALSE}
+# teste de aderencia dentro das variáveis para verificar 
+# se as diferenças entre as categorias são significativas estatisticamente
+
+p_aderencia <- function(data, variable, ...) {
+  res <- chisq.test(table(data[[variable]]))
+  tibble::tibble(p.value = style_pvalue(res$p.value, digits = 3))
+}
+
+table2 <- dados %>%
+  select(
+    Frutas, Legumes_Verduras
+  ) %>%
+  tbl_summary(
+    statistic = all_categorical() ~ "{n} ({p}%)",
+    digits = all_categorical() ~ c(0, 2),
+    label = list(
+      Frutas ~ "Frutas",
+      Legumes_Verduras ~ "Legumes e Verduras"
+    ),
+    missing = "no"   
+  ) %>%
+    add_stat(fns = everything() ~ p_aderencia) %>% # <--- Adiciona o teste customizado
+  modify_header(p.value ~ "**Valor-p**") %>%
+  # modify_caption("Proporção das categorias nas variáveis desfecho") %>%  
+  bold_labels()
+
+table2
+```
+:::
+
+::: {.column width="33%"}
+```{r warning=FALSE, message=FALSE}
+# teste de aderencia dentro das variáveis para verificar 
+# se as diferenças entre as categorias são significativas estatisticamente
+
+p_aderencia <- function(data, variable, ...) {
+  res <- chisq.test(table(data[[variable]]))
+  tibble::tibble(p.value = style_pvalue(res$p.value, digits = 3))
+}
+
+table2 <- dados %>%
+  select(
+    Bebidas_Alcoolicas,Produtos_Industrializados
+  ) %>%
+  tbl_summary(
+    statistic = all_categorical() ~ "{n} ({p}%)",
+    digits = all_categorical() ~ c(0, 2),
+    label = list(
+      Bebidas_Alcoolicas ~ "Bebidas Alcoólicas",
+      Produtos_Industrializados ~ "Produtos Industrializados"
+    ),
+    missing = "no"   
+  ) %>%
+    add_stat(fns = everything() ~ p_aderencia) %>% # <--- Adiciona o teste customizado
+  modify_header(p.value ~ "**Valor-p**") %>%
+  # modify_caption("Proporção das categorias nas variáveis desfecho") %>%  
+  bold_labels()
+
+table2
+```
+:::
+
+::: {.column width="33%"}
+```{r warning=FALSE, message=FALSE}
+# teste de aderencia dentro das variáveis para verificar 
+# se as diferenças entre as categorias são significativas estatisticamente
+
+p_aderencia <- function(data, variable, ...) {
+  res <- chisq.test(table(data[[variable]]))
+  tibble::tibble(p.value = style_pvalue(res$p.value, digits = 3))
+}
+
+table2 <- dados %>%
+  select(
+    Doces
+  ) %>%
+  tbl_summary(
+    statistic = all_categorical() ~ "{n} ({p}%)",
+    digits = all_categorical() ~ c(0, 2),
+    label = list(
+      Doces ~ "Doces"
+    ),
+    missing = "no"   
+  ) %>%
+    add_stat(fns = everything() ~ p_aderencia) %>% # <--- Adiciona o teste customizado
+  modify_header(p.value ~ "**Valor-p**") %>%
+  # modify_caption("Proporção das categorias nas variáveis desfecho") %>%  
+  bold_labels()
+
+table2
+```
+
+
+:::
+
+::::
+
+## **RESULTADOS**
+
+#### Como se deu o consumo dos grupos alimentares
+
+Os valores-p muito pequenos indicam que as proporções nas respostas são sigficativamente diferentes. Podemos observar um aumento no consumo de todos os alimentos selecionados, com destaque para Doces, onde mais de 50% relataram aumento no seu consumo.
+
+## **RESULTADOS**
+
+```{r}
+explicativas <- c('Genero', 'Renda_familiar', 'Escolaridade', 'Trabalha', 'Dificuldade_Financeira')
+desfechos    <- c('Frutas', 'Legumes_Verduras', 'Bebidas_Alcoolicas', 'Produtos_Industrializados', 'Doces')
+
+nomes_desfechos <- c(
+  "Frutas"              = "Frutas",
+  "Legumes_Verduras"     = "Legumes e Verduras",
+  "Bebidas_Alcoolicas"       = "Bebidas Alcoolicas",
+  "Produtos_Industrializados"           = "Produtos Industrializados",
+  "Doces" = "Dificuldade Doces"
+)
+
+resultados <- expand.grid(Explicativa = explicativas, Desfecho = desfechos, stringsAsFactors = FALSE) %>%
+  rowwise() %>%
+  mutate(
+    p_valor = round(chisq.test(table(dados[[Explicativa]], dados[[Desfecho]]))$p.value, 5)
+  ) %>%
+  ungroup() %>%
+  arrange(desc(p_valor))
+
+relacoes_significativas <- resultados %>%
+  mutate(Explicativa = factor(Explicativa, levels = explicativas)) %>%
+  arrange(Explicativa, p_valor)
+
+plot_bivariado <- function(exp, desf) {
+  
+  exp <- as.character(exp)
+  desf_label <- nomes_desfechos[desf]
+  
+  ggplot(dados, aes(x = .data[[exp]],fill = .data[[desf]],by = .data[[exp]])) +
+    geom_bar(position = "fill") +
+    geom_text(
+      stat = "prop",
+      position = position_fill(0.5),
+      size = 2.7
+    ) +
+    scale_fill_manual(
+      values = jama_colors,
+      name = "Mudança no consumo"
+    ) +
+    scale_y_continuous(
+      labels = scales::percent,
+      expand = expansion(mult = c(0, 0.02))
+    ) +
+    labs(
+      title = stringr::str_wrap(
+        paste("Consumo de", desf_label),
+        width = 32
+      ),x = NULL,y = "Proporção"
+    ) +
+    theme_minimal(base_size = 9) +
+    theme(
+      plot.title = element_text(
+        size = 10,face = "bold",hjust = 0.5,margin = margin(b = 5)
+      ),
+      axis.text.x = element_text(
+        angle = 40,hjust = 1,vjust = 1,size = 7
+      ),
+      axis.text.y = element_text(size = 7),
+      axis.title.y = element_text(size = 8),
+      panel.grid.minor = element_blank(),
+      plot.margin = margin(t = 5,r = 5,b = 5,l = 5),
+      legend.position = "bottom",
+      legend.title = element_text(size = 8),
+      legend.text = element_text(size = 7),
+      legend.key.size = unit(0.4, "cm")
+    )
+}
+# Gerar lista com os gráficos significativos ordenados
+graficos <- map2(relacoes_significativas$Explicativa, 
+                 relacoes_significativas$Desfecho, 
+                 plot_bivariado)
+```
+
+
+#### Como se deu o consumo dos grupos alimentares
+##### **Escolaridade:**
+
+```{r}
+
+(graficos[[11]] + theme(axis.text.x = element_blank()) + graficos[[13]] + labs(y="") + theme(axis.text.x = element_blank())) /
+(graficos[[15]] + graficos[[12]]+ labs(y="")) +
+  
+  plot_layout(
+    guides = "collect"
+  ) &
+  
+  theme(
+    legend.position = "bottom"
+  )
+
+```
+
+## **RESULTADOS**
+
+##### **Trabalho:**
+
+```{r}
+
+(graficos[[16]] + theme(axis.text.x = element_blank()) + graficos[[19]] + labs(y="") + theme(axis.text.x = element_blank())) /
+(plot_spacer() + graficos[[17]] + plot_spacer()) 
+  
+  plot_layout(
+    guides = "collect"
+  ) &
+  
+  theme(
+    legend.position = "bottom"
+  )
+
+```
+
+
+
+
+Pudemos observar um aumento no consumo de todos os alimentos selecionados, com destaque para Doces, onde mais de 50% relataram aumento no seu consumo.
+
+#O consumo de bebidas alcoolicas, frutas, legumes/verduras aumentou conforme aumentava a escolaridade do respondente. Além #disso, a maior proporção de 'Não tenho hábito' no consumode de produtos industrializados foi nos respondentes pós graduados.
+
+#O consumo de bebidas alcoolicas, produtos industrializados e doces foi menor dentre as pessoas que trabalham.
+
+O consumo de todos os alimentos selecionados diminuiu dentre que passou por dificuldades financeiras.
+
+O consumo de todos os alimentos selecionados, exceto produtos industrializados, aumentou dentre as pessoas de maior renda familiar (mais de R$ 8640,00).
+
+Já a distribuição das idades foi bem similar para cada categoria de consumo alimentar listada.

@@ -9,6 +9,10 @@ format:
     code-fold: true
     embed-resources: true
 editor: visual
+execute:
+  echo: true
+  warning: false
+  message: false
 ---
 
 ```{r echo=TRUE, warning=FALSE, message=FALSE}
@@ -32,151 +36,6 @@ theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",")
 Em 2022, alunas do curso de pós-graduação em Nutrição da UFF coletam `r nrow(dados0)` respostas em um questionário online com `r ncol(dados0)` perguntas relacionadas a características sociodemográficas, condições vivenciadas durante a pandemia de COVID-19, características antropométricas e mudanças nos hábitos alimentares.
 
 O objetivo desse estudo é, a partir da base de dados coletada, responder a seguinte pergunta: As mudanças de hábito alimentares na pandemia foram para bons ou maus hábitos?
-
-# Dados e Variáveis Utilizadas
-
-
-
-
-
-
-
-O que será investigado:
-- As mudanças de hábito que ocorreram na pandemia 
-foram para bons ou maus hábitos?
-
-
-
-Introdução:
-
-- Descrever a origem dos dados
--- periodo
--- individuos analisados
--- como e quando se deu a coleta dos dados
-- Descrever o contexto e foco da minha analise
-
-- Texto
-
-Dados e Variáveis Utilizadas:
-
-- Descrever o subuniverso que será utilizado
-- Descrever quais variáveis serão utilizadas para
-analisar o foco da analise
-
-- Texto e tabela com a descritiva
-
-Resultados:
-
-- Gráficos e tabelas para observar as mudanças de hábitos
-relatadas e a suas relações com caracteristicas 
-sociodemográficas.
-
-Principais Achados:
-
-- Principais destaques / resumo da parte de resultados.
-
-
-
-
-
-
-
-
-
-## Objetivos do estudo
-
-A base de dados tem como propósito investigar as mudanças nos hábitos alimentares durante a pandemia de COVID-19 e sua possível associação com características sociodemográficas, econômicas, antropométricas e relacionadas às condições vivenciadas durante o período.
-
-De forma específica, busca:
-
--   Caracterizar o perfil sociodemográfico e antropométrico dos participantes, considerando gênero, raça/cor, região de residência, escolaridade, renda familiar, idade e IMC;
--   Descrever as condições vivenciadas durante a pandemia, incluindo isolamento social, dificuldades financeiras e ocorrência de COVID-19;
--   Identificar a ocorrência de alterações gerais na alimentação durante a pandemia;
--   Examinar mudanças específicas no consumo alimentar, considerando aumento, redução ou manutenção do consumo de diferentes grupos de alimentos e bebidas;
--   Investigar associações entre as mudanças nos hábitos alimentares e as características sociodemográficas, econômicas, antropométricas e relacionadas à pandemia;
--   Compreender possíveis desigualdades nos impactos da pandemia sobre os hábitos alimentares dos participantes.
-
-## INTRODUÇÃO E CONTEXTUALIZAÇÃO
-
-Inicialmente, apresentem brevemente o contexto da base de dados e o problema que será investigado.
-
-Essa parte deve permitir que uma pessoa que não conhece previamente a base compreenda:
-
--   de onde vieram os dados;
--   quem são os indivíduos ou unidades analisadas;
--   quando e como os dados foram coletados;
--   qual é o contexto do estudo;
--   qual será o foco da análise realizada.
-
-A contextualização deve ser breve e direcionada ao restante da apresentação.
-
-### OBJETIVOS DA ANÁLISE
-
-Apresentem de forma clara o objetivo geral da análise e, quando necessário, os objetivos específicos que orientarão a apresentação.
-
-Os objetivos deverão funcionar como um guia para a construção da narrativa.
-
-Evitem simplesmente reproduzir todos os objetivos sugeridos na descrição da base. Será possível selecionar e priorizar determinados aspectos, desde que consiga desenvolver uma análise coerente dentro do tempo disponível.
-
-### DADOS E VARIÁVEIS UTILIZADAS
-
-Apresentem brevemente a base de dados e indiquem quais variáveis foram selecionadas para a análise.
-
-Procurem distinguir, quando pertinente:
-
--   variáveis desfecho;
--   variáveis explicativas;
--   variáveis qualitativas;
--   variáveis quantitativas.
-
-Não é necessário apresentar detalhadamente todas as variáveis existentes na base. Destaquem principalmente aquelas que serão importantes para compreender os resultados apresentados posteriormente.
-
-Tabelas compactas, esquemas ou outros recursos visuais podem ser utilizados para facilitar essa apresentação.
-
-### RESULTADOS
-
-Esta deverá ser a parte principal da apresentação.
-
-Os resultados deverão ser organizados de maneira lógica e conectados aos objetivos definidos anteriormente.
-
-Utilizem adequadamente os recursos estudados na disciplina, incluindo:
-
--   tabelas automáticas;
--   gráficos estatísticos estáticos;
--   medidas descritivas, quando pertinentes;
--   comparações entre grupos;
--   cruzamentos entre variáveis;
--   outros recursos de análise exploratória que contribuam para a investigação.
-
-### PRINCIPAIS ACHADOS
-
-Ao final da apresentação, sintetizem os principais resultados encontrados.
-
-Em vez de simplesmente repetir números apresentados anteriormente, procurem responder:
-
-O que aprendemos com esses dados?
-
-Destaquem os padrões, diferenças ou associações que considerarem mais relevantes para os objetivos estabelecidos.
-
-Quando pertinente, também poderão ser mencionadas limitações importantes dos dados ou da análise realizada.
-
-### ORGANIZAÇÃO E COMUNICAÇÃO
-
-A qualidade do projeto não será avaliada apenas pela quantidade de técnicas utilizadas.
-
-Será considerada especialmente a capacidade do grupo de:
-
--   selecionar informações relevantes;
--   construir uma narrativa coerente;
--   utilizar adequadamente tabelas e gráficos;
--   interpretar corretamente os resultados;
--   comunicar os achados de maneira clara;
--   produzir uma apresentação visualmente organizada;
--   respeitar o limite de 15 minutos.
-
-A apresentação deverá ser planejada para o público, e não apenas como uma demonstração dos códigos desenvolvidos.
-
-Não é necessário exibir códigos extensos durante a apresentação. O código deverá estar incorporado ao documento Quarto e ser utilizado para garantir a reprodutibilidade da análise.
 
 ```{r echo=TRUE, warning=FALSE, message=FALSE}
 explicativas = c(
@@ -211,7 +70,7 @@ tbl_summary(
       select(all_of(explicativas), "Alteracao_Pandemia"),
     by = "Alteracao_Pandemia",
     statistic = list(all_categorical() ~ "{n} ({p}%)",
-                     all_continuous() ~ "{mean} ({sd})"),
+                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
     label = list(
         Genero ~ "Gênero",
         Raca_cor ~ "Raça/Cor",
@@ -221,11 +80,12 @@ tbl_summary(
         Trabalha ~ "Trabalha",
         Idade ~ "Idade (anos)",
         Dificuldade_Financeira ~ "Dificuldade financeira"
-  )                 
+    )
 ) %>%
     modify_spanning_header(all_stat_cols() ~ "**Alteração de hábitos alimentares na pandemia**") %>%
     modify_header(label ~ "**Variáveis**") %>%
     bold_labels() %>%
+    modify_caption("Descritiva das variáveis explicativas na amostra") %>%
     modify_footnote(all_stat_cols() ~ "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP).") %>%
   add_p(
     test = list(all_categorical() ~ "chisq.test"),
@@ -243,50 +103,37 @@ Sobre a alteração de hábitos alimentares na pandemia:
   - (Genero) As mulheres mudaram mais seus hábitos alimentares do que os homens.
   - (Renda_familiar) Famílias com renda de até R$ 1254,00 apresentaram maior mudança de hábitos e famílias com renda maior do que R$8640,00 apresentaram uma maior proporção do preenchimento de 'Não mudança de hábito'.
   - (Escolaridade) Altas escolaridades apresentaram maior proporção de não mudança de hábito e baixas escolaridades apresentaram maior proporção de mudança de hábito.
-  - (Trabalha)Quem não trabalha teve maior mudança de hábito.
+  - (Trabalha) Quem não trabalha teve maior mudança de hábito.
+  - (Idade) A média de idade em quem mudou de hábito é menor e concentrada entre 22 - 39.
   - (Dificuldade_Financeira) Quem passou por dificuldade financeira apresentou maior mudança de hábito. Quem não passou por dificuldade financeira não passou por mudança de hábito.
+
+Disclaimer: A maior parte da base é de mulheres brancas da região sul/sudeste. Essa amostragem não é representativa para o Brasil, então a interpretação deve levar essa limitação em consideração. Além disso, a proporção de pessoas com pós graduação é muito semelhante a proporção de pessoas com ensino médio completo.
 
 ### Filtrando somente que declarou alteração de hábito na pandemia e selecionando as variáveis
 
-Aqui vou supor que quem respondeu 'Alteracao_Pandemia = Não' deveria ter preenchido nas variáveis associadas 'Não alterou
+O objetivo do estudo é entender o perfil de quem mudou os hábitos alimentares durante a pandemia e verificar o sentido dessa mudança (bons ou maus hábito), então o universo da análise vai levar em consideração somente que responder "Alteracao_Pandemia = Sim"
 
 ```{r, echo=TRUE, warning=FALSE, message=FALSE}
-variaveis_estudo = c(desfechos, 'Genero', 'Renda_familiar','Escolaridade','Trabalha','Dificuldade_Financeira')
+variaveis_estudo = c(desfechos, 'Genero', 'Renda_familiar','Escolaridade','Trabalha', 'Idade','Dificuldade_Financeira')
 
 dados = dados0 %>% 
   filter(Alteracao_Pandemia == "Sim") %>%
   select(all_of(variaveis_estudo))
 ```
 
+## Perfil sociodemográfico
 
-# Próximo passo: considerando quem mudou de hábito, essa mudança foi para bons hábitos ou maus hábitos? Qual a relação desses bons/maus hábitos com as variáveis da seção anterior? Exemplo: famílias de mais baixa renda passaram a consumir mais embutidos e industrializados? As mulheres que mudaram de hábito passaram a ter uma alimentação mais saudável? Pessoas que não trabalhavam passaram a consumir mais alcool? Etc.
-
-Resultados gerados abaixo:
-
-- Tabela descritiva das variáveis explicativas escolhidas - ok
-- Tabela descritiva das variáveis desfecho escolhidas - ok
-- Gráfico de barras das variáveis desfecho escolhidas - ok
-- Gráfico de barras 2 a 2 das variáveis explicativas e desfecho - ok
-- Criar cluster com as variáveis dos hábitos e analisar os clusters com as variáveis explicativas
-- Criação de um escore para avaliar individualmente se a alimentação da pessoa melhorou ou piorou e relacionar com as variáveis explicativas - ok
-
-  - Dar uma atenção na interpretação da variável Dificuldade_Financeira
-
-
-
-## Caracterizar o perfil sociodemográfico
-
-`r nrow(dados)` das `r nrow(dados0)` pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia. Esse é o público alvo desse estudo.
+`r nrow(dados)` das `r nrow(dados0)` pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia.
 
 ```{r warning=FALSE, message=FALSE}
 table1 <- dados %>%
   select(
-    Genero, Renda_familiar, Escolaridade, Trabalha, Dificuldade_Financeira
+    Genero, Renda_familiar, Escolaridade, Trabalha, Idade, Dificuldade_Financeira
   ) %>%
   tbl_summary(
     statistic = list(
       all_categorical() ~ "{n} ({p}%)",
-      all_continuous() ~ "{mean} ({sd}) [{min} - {max}]"
+      all_continuous() ~ "{mean} [{p25} - {p75}]"
     ),
     digits = list(
       all_continuous() ~ 2,
@@ -301,12 +148,33 @@ table1 <- dados %>%
     ),
     missing = "no"
   ) %>%
-  bold_labels()
+  bold_labels() %>%
+  modify_caption("Descritiva das variáveis explicativas entre quem mudou de hábito alimentar durante a pandemia")
 
 table1
 ```
 
+De modo geral, pessoas com renda familiar entre R$ 1.255 - R$ 8.640, ensino médio completo ou pós graduação, que trabalhavam e não passaram por dificuldade financeira durante a pandemia compoe o perfil de quem responder ter mudado os hábitos alimentares nesse período.
+
+## Mudanças alimentares
+
+Dentre as opções disponíveis no questionário, foram selecionadas as seguintes para classificar boa ou má mudança de hábito alimentar:
+
+- Frutas
+- Legumes e Verduras
+- Bebidas Alcoólicas
+- Produtos Industrializados
+- Doces
+
 ```{r warning=FALSE, message=FALSE}
+# teste de aderencia dentro das variáveis para verificar 
+# se as diferenças entre as categorias são significativas estatisticamente
+
+p_aderencia <- function(data, variable, ...) {
+  res <- chisq.test(table(data[[variable]]))
+  tibble::tibble(p.value = style_pvalue(res$p.value, digits = 3))
+}
+
 table2 <- dados %>%
   select(
     Frutas, Legumes_Verduras, Bebidas_Alcoolicas,
@@ -322,12 +190,17 @@ table2 <- dados %>%
       Produtos_Industrializados ~ "Produtos Industrializados",
       Doces ~ "Doces"
     ),
-    missing = "no"
+    missing = "no"   
   ) %>%
+    add_stat(fns = everything() ~ p_aderencia) %>% # <--- Adiciona o teste customizado
+  modify_header(p.value ~ "**Valor-p**") %>%
+  modify_caption("Proporção das categorias nas variáveis desfecho") %>%  
   bold_labels()
 
 table2
 ```
+
+Os valores-p muito pequenos indicam que as proporções nas respostas são sigficativamente diferentes. Podemos observar um aumento no consumo de todos os alimentos selecionados, com destaque para Doces, onde mais de 50% relataram aumento no seu consumo.
 
 ```{r echo=TRUE, warning=FALSE, message=FALSE}
 jama_colors <- c('#374e55', '#df8f44', '#00a1d5', '#b24745')
@@ -337,8 +210,7 @@ labels_desfechos <- list(
   Legumes_Verduras = "Legumes e Verduras",
   Bebidas_Alcoolicas = "Bebidas Alcoólicas",
   Produtos_Industrializados = "Produtos Industrializados",
-  Consumo_agua = "Consumo de Água",
-  Embutidos = "Embutidos"
+  Consumo_agua = "Consumo de Água"
 )
 
 grafico_distribuicao <- function(df, col, labels_desfechos = list(), colors = jama_colors) {
@@ -371,82 +243,16 @@ grafico_distribuicao <- function(df, col, labels_desfechos = list(), colors = ja
 }
 ```
 
-```{r warning=FALSE, message=FALSE}
-grafico_distribuicao(
-    dados,
-    'Frutas',
-    labels_desfechos
-)
-
-```
-
-```{r warning=FALSE, message=FALSE}
-grafico_distribuicao(
-    dados,
-    'Legumes_Verduras',
-    labels_desfechos
-)
-
-```
-
-```{r warning=FALSE, message=FALSE}
-grafico_distribuicao(
-    dados,
-    'Bebidas_Alcoolicas',
-    labels_desfechos
-)
-
-```
-
-```{r warning=FALSE, message=FALSE}
-grafico_distribuicao(
-    dados,
-    'Produtos_Industrializados',
-    labels_desfechos
-)
-
-```
-
-```{r warning=FALSE, message=FALSE}
-grafico_distribuicao(
-    dados,
-    'Doces',
-    labels_desfechos
-)
-
-```
-
-
-
-
 ```{r}
-library(webr)           
-
-PieDonut(data=dados,
-          mapping=aes(pies=Renda_familiar,
-                  donut = Bebidas_Alcoolicas),
-          r0=0.4,
-          showPieName = F,
-          pieLabelSize = 4)
+for(i in 1:length( desfechos[2:length(desfechos)])){
+  print(
+    grafico_distribuicao(
+    dados,
+    desfechos[2:length(desfechos)][i],
+    labels_desfechos)
+  )
+}
 ```
-
-- Podemos observar que quanto maior a renda, maior foi o aumento no consumo de alcool
-
-
-```{r}
-library(ggstats)
-
-ggplot(dados, aes(x = Genero, fill = Doces, by= Genero)) +
-  geom_bar(position = "fill") +
-  geom_text(stat = "prop", position = position_fill(.5)) +
-  scale_fill_brewer(name="Satisfação com a\nocomida e bebida",palette = "Dark2")+
-  scale_y_continuous(labels = scales::percent) +
-  xlab("Gênero")+
-  ylab("Proporção relativa (%)") +
-  theme_bw()+
-  theme(text = element_text(size = 14))
-```
-
 
 ```{r}
 library(tidyverse)
@@ -460,12 +266,17 @@ resultados <- expand.grid(Explicativa = explicativas, Desfecho = desfechos, stri
     p_valor = round(chisq.test(table(dados[[Explicativa]], dados[[Desfecho]]))$p.value, 5)
   ) %>%
   ungroup() %>%
-  arrange(p_valor)
+  #arrange(Explicativa)
+  arrange(desc(p_valor))
 
-kable(resultados)
+kable(resultados,
+digits = 3,
+caption = "Associação entre variável Explicativa com os alimentos selecionados")
 ```
 
 # Gráficos 2 a 2
+
+## Quantitativas x Qualitativa
 
 ```{r}
 library(ggstats)
@@ -483,7 +294,7 @@ plot_bivariado <- function(exp, desf) {
   ggplot(dados, aes(x = .data[[exp]], fill = .data[[desf]], by = .data[[exp]])) +
     geom_bar(position = "fill") +
     geom_text(stat = "prop", position = position_fill(0.5), size = 3.5) +
-    scale_fill_brewer(palette = "Set2", name = desf) +
+    scale_fill_manual(values = jama_colors, name = desf) +
     scale_y_continuous(labels = scales::percent) +
     labs(
       title = paste(desf, "por", exp),
@@ -492,6 +303,8 @@ plot_bivariado <- function(exp, desf) {
     ) +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+  
 }
 
 # Gerar lista com os gráficos significativos ordenados
@@ -500,7 +313,53 @@ graficos <- map2(relacoes_significativas$Explicativa,
                  plot_bivariado)
 ```
 
+```{r}
+for(i in 1:length(graficos)){
+  print(graficos[[i]])
+}
+```
 
+## Qualitativa x Quantitativas
+
+```{r}
+library(ggridges)
+
+variaveis = tibble(
+  Quantitativa = rep("Idade", 5),
+  Qualitativa = c('Genero', 'Renda_familiar', 'Escolaridade', 'Trabalha', 'Dificuldade_Financeira')
+)
+
+labels_desfechos <- list(
+  Frutas = "Frutas",
+  Legumes_Verduras = "Legumes e Verduras",
+  Bebidas_Alcoolicas = "Bebidas Alcoólicas",
+  Produtos_Industrializados = "Produtos Industrializados",
+  Consumo_agua = "Consumo de Água"
+)
+
+plot_bivariado <- function(exp, desf) {
+  exp <- as.character(exp)
+  desf <- as.character(desf)
+
+  col_label <- if (desf %in% names(labels_desfechos)) labels_desfechos[[desf]] else desf
+
+  ggplot(data = dados, 
+         mapping = aes(x = .data[[exp]], y = .data[[desf]], fill = .data[[desf]])) + # ADICIONADO: fill
+    geom_density_ridges(alpha = 0.8, show.legend = FALSE) + # alpha melhora a visualização
+    scale_fill_manual(values = jama_colors) +
+    labs(
+      title = paste("Distribuição de", exp, "por", col_label),
+      x = exp,
+      y = col_label
+    ) +
+    theme_minimal()
+}
+
+# Gerar lista com os gráficos significativos ordenados
+graficos <- map2(variaveis$Quantitativa, 
+                 variaveis$Qualitativa, 
+                 plot_bivariado)
+```
 
 ```{r}
 for(i in 1:length(graficos)){
@@ -510,6 +369,133 @@ for(i in 1:length(graficos)){
 
 
 
+
+# Clusterização 
+
+Nessa seção foi aplicada a técnica de K-Means pra clusterização dos dados, onde foi possível identificar três grupos:
+
+- Mudanças para bons hábitos
+- Mudanças para maus hábitos
+- Mudança generalizada
+
+```{r}
+# 1. Carregar os pacotes
+library(tidymodels)
+library(tidyclust) # Extensão do tidymodels para clusterização
+
+set.seed(2026)
+# 2. Dados de exemplo (removendo a variável categórica do dataset iris)
+dados_clust <- dados %>%
+  select(Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Produtos_Industrializados, Doces) %>%
+  mutate(across(everything(), ~ case_when(
+    . == "Não tenho o hábito" ~ 0,
+    . == "Diminuiu"           ~ 1,
+    . == "Não alterou"        ~ 2,
+    . == "Aumentou"           ~ 3,
+    TRUE                      ~ NA_real_
+  )))
+
+# 3. Criar a receita de pré-processamento (K-Means exige variáveis normalizadas)
+rec_kmeans <- recipe(~ ., data = dados_clust) %>%
+  step_normalize(all_numeric_predictors())
+
+# 4. Especificar o modelo KMeans (ex: k = 3 clusters)
+spec_kmeans <- k_means(num_clusters = 3) %>%
+  set_engine("stats")
+
+# 5. Criar o Workflow e ajustar o modelo
+wf_kmeans <- workflow() %>%
+  add_recipe(rec_kmeans) %>%
+  add_model(spec_kmeans)
+
+fit_kmeans <- wf_kmeans %>% fit(data = dados_clust)
+
+# 6. Extrair resultados e atribuições de clusters
+# Adiciona a coluna com a atribuição do cluster a cada observação
+dados_com_clusters <- augment(fit_kmeans, new_data = dados_clust)
+# head(dados_com_clusters)
+
+# Visualizar os centroides de cada cluster (nas escalas normalizadas)
+# extract_centroids(fit_kmeans)
+
+
+dados = dados %>%
+  bind_cols(dados_com_clusters %>% select(.pred_cluster))
+
+```
+
+```{r}
+tbl_summary(
+    data = dados %>%
+      select(all_of(c("Frutas", "Legumes_Verduras", 
+                      "Bebidas_Alcoolicas","Produtos_Industrializados",
+                      "Doces" )), .pred_cluster)
+    ,
+    by = ".pred_cluster",
+    statistic = list(all_categorical() ~ "{n} ({p}%)",
+                     all_continuous() ~ "{mean} ({sd})")
+) %>%
+  modify_caption("Descritiva das variáveis desfecho para os Clusters") 
+```
+
+
+```{r}
+tbl_summary(
+    data = dados %>%
+      select(all_of(c('Genero', 'Renda_familiar','Escolaridade',
+                      'Trabalha', 'Idade', 'Dificuldade_Financeira')), .pred_cluster)
+    ,
+    by = ".pred_cluster",
+    statistic = list(all_categorical() ~ "{n} ({p}%)",
+                     all_continuous() ~ "{mean} [{p25} - {p75}]")      
+) %>%
+  modify_caption("Descritiva das variáveis explicativas para os Clusters")
+```
+
+Ou seja, podemos separar os respondentes dos questionários em 3 grupos:
+
+- Os que aumentaram o consumo de todo tipo de alimento: 
+  
+  - Aumentou: Frutas, Legumes/Verduras, Bebidas Alcoolicas, Doces
+  - Não alterou: Produtos Industrializados
+
+  - Maior proporção de renda familiar acima de R$ 8640; 
+  - Maior proporção de pós graduados; 
+  - Menor proporção de não trabalha; 
+  - Menor proporção de dificuldade financeira
+
+- Os que aumentaram o consumo de alimentos não-saudáveis:
+  
+  - Aumentou: Bebidas Alcoolicas, Produtos Industrializados, Doces
+  - Diminuiu: Frutas, Legumes/Verduras
+
+  - Menor proporção na faixa de alta renda;
+  - Maior proporção de dificuldade financeira.
+  - Idades mais concentradas (p25 = 22 e p75 = 37)
+
+- Os que aumentaram o consumo de alimentos não-saudáveis:
+  
+  - Aumentou: Frutas, Legumes/Verduras
+  - Diminuiu: Bebidas Alcoolicas, Produtos Industrializados, Doces
+
+  - Menor proporção na faixa de alta renda;
+  - Maior proporção de não-trabalho;
+  - Maior proporção de dificuldade financeira.
+  - Idades mais dispersa (p25 = 21 e p75 = 44)
+
+
+
+# Apendice
+
+## Criação de um "escore alimentar"
+
+Aqui foi testada a criação de um escore para se verificar se poderia ser observada via odds-ratio a influencia das variáveis explicativas numa escala de melhora/piora alimentar.
+
+Para os alimentos saudáveis (Frutas, Legumes_Verduras), se aumentou o consumo soma 1 ponto e se diminuiu o consumo subtrai um ponto, e vice-versa para os alimentos não-saudáveis. 
+
+Se a soma ficou menor do que zero, é classificado como piorou. Se maior do que zero, melhorou. E se igual a zero, manteve os hábitos.
+
+Abaixo a quantidade de pessoas em cada categoria segundo o escore.
 
 ```{r}
 calcular_escore_alimentar <- function(dados,
@@ -521,14 +507,14 @@ calcular_escore_alimentar <- function(dados,
   
   dados_proc <- dados
   
-  # Mapeamento para alimentos saudáveis (+1 aumento, -1 redução, 0 sem mudança)
+  # Para alimentos saudáveis (+1 aumento, -1 redução, 0 sem mudança)
   pontuar_saudavel <- function(x) {
     ifelse(x == rotulo_aumentou, 1,
     ifelse(x == rotulo_diminuiu, -1,
     ifelse(x %in% rotulos_sem_mudanca, 0, NA)))
   }
   
-  # Mapeamento para alimentos não saudáveis (-1 aumento, +1 redução, 0 sem mudança)
+  # Para alimentos não saudáveis (-1 aumento, +1 redução, 0 sem mudança)
   pontuar_nao_saudavel <- function(x) {
     ifelse(x == rotulo_aumentou, -1,
     ifelse(x == rotulo_diminuiu, 1,
@@ -557,11 +543,12 @@ calcular_escore_alimentar <- function(dados,
 # EXEMPLO DE USO 1:
 # ------------------------------------------------------------------------------
 dados <- calcular_escore_alimentar(dados)
-table(dados$Escore_Categoria) # Exibe contagem dos grupos
+kable(table(dados$Escore_Categoria),
+      caption = "Contagem nos grupos do escore alimentar",
+      col.names = c(" ", "Total"))
 ```
 
-
-
+Na tabela abaixo podemos ver que todos os valores-p são altos e, consequentemente, os intervalos de confiança das odds-ratio contêm o 1. 
 
 ```{r}
 ajustar_regressao_multivariada <- function(dados,
@@ -619,100 +606,14 @@ ajustar_regressao_multivariada <- function(dados,
   ))
 }
 
-# ------------------------------------------------------------------------------
-# EXEMPLO DE USO 2:
-# ------------------------------------------------------------------------------
-# # 1. Garanta que calculou o escore primeiro:
-# meudados <- calcular_escore_alimentar(dados)
-#
 # # 2. Execute a regressão multivariada:
 resultado_regressao <- ajustar_regressao_multivariada(dados)
 #
 # # 3. Visualize a tabela de Odds Ratios:
-print(resultado_regressao$tabela_resultados)
+kable(resultado_regressao$tabela_resultados, 
+      caption = "Odds - Ratio para o escore alimentar",
+      col.names = c("Variáveis", "Odds Ratio", "IC 95% sup", "IC 95% inf", "valor p"))
 ```
 
+A criação desse escore não foi uma boa estratégia para diferenciar essas características.
 
-
-
-
-```{r}
-dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
-
-dados = dados0 %>% 
-  filter(Alteracao_Pandemia == "Sim")
-
-
-# 1. Carregar os pacotes
-library(tidymodels)
-library(tidyclust) # Extensão do tidymodels para clusterização
-
-set.seed(2026)
-# 2. Dados de exemplo (removendo a variável categórica do dataset iris)
-dados_clust <- dados %>%
-  select(Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Produtos_Industrializados, Doces) %>%
-  mutate(across(everything(), ~ case_when(
-    . == "Não tenho o hábito" ~ 0,
-    . == "Diminuiu"           ~ 1,
-    . == "Não alterou"        ~ 2,
-    . == "Aumentou"           ~ 3,
-    TRUE                      ~ NA_real_
-  )))
-
-# 3. Criar a receita de pré-processamento (K-Means exige variáveis normalizadas)
-rec_kmeans <- recipe(~ ., data = dados_clust) %>%
-  step_normalize(all_numeric_predictors())
-
-# 4. Especificar o modelo KMeans (ex: k = 3 clusters)
-spec_kmeans <- k_means(num_clusters = 3) %>%
-  set_engine("stats")
-
-# 5. Criar o Workflow e ajustar o modelo
-wf_kmeans <- workflow() %>%
-  add_recipe(rec_kmeans) %>%
-  add_model(spec_kmeans)
-
-fit_kmeans <- wf_kmeans %>% fit(data = dados_clust)
-
-# 6. Extrair resultados e atribuições de clusters
-# Adiciona a coluna com a atribuição do cluster a cada observação
-dados_com_clusters <- augment(fit_kmeans, new_data = dados_clust)
-head(dados_com_clusters)
-
-# Visualizar os centroides de cada cluster (nas escalas normalizadas)
-extract_centroids(fit_kmeans)
-
-
-dados = dados %>%
-  bind_cols(dados_com_clusters %>% select(.pred_cluster))
-
-tbl_summary(
-    data = dados #%>%
-      #select(all_of(c('Genero', 'Renda_familiar','Escolaridade','Trabalha','Dificuldade_Financeira')), .pred_cluster)
-    ,
-    by = ".pred_cluster",
-    statistic = list(all_categorical() ~ "{n} ({p}%)",
-                     all_continuous() ~ "{mean} ({sd})")              
-)
-
-
-
-cluster 1: (aumentou o consumo de todo dia de alimento)
-  Aumentou: Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Doces
-  Não alterou: Produtos_Industrializados
-  Diminuiu: 
-
-cluster 2: (aumentou o consumo de alimentos não-saudáveis)
-  Aumentou: Bebidas_Alcoolicas, Produtos_Industrializados, Doces
-  Não alterou: 
-  Diminuiu: Frutas, Legumes_Verduras
-
-cluster 3: (aumentou o consumo de alimentos saudáveis)
-  Aumentou: Frutas, Legumes_Verduras
-  Não alterou: 
-  Diminuiu: Bebidas_Alcoolicas, Produtos_Industrializados, Doces
-
-Próximo passo: analisar as variáveis explicativas de cada cluster
-
-
-```

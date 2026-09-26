@@ -276,7 +276,7 @@ caption = "Associação entre variável Explicativa com os alimentos selecionado
 
 # Gráficos 2 a 2
 
-## Quantitativas x Qualitativa
+## Quantitativas x Quantitativa
 
 ```{r}
 library(ggstats)
@@ -297,7 +297,7 @@ plot_bivariado <- function(exp, desf) {
     scale_fill_manual(values = jama_colors, name = desf) +
     scale_y_continuous(labels = scales::percent) +
     labs(
-      title = paste(desf, "por", exp),
+      title = paste("Consumo de",desf, "por", exp),
       x = exp,
       y = "Proporção (%)"
     ) +
@@ -326,7 +326,7 @@ library(ggridges)
 
 variaveis = tibble(
   Quantitativa = rep("Idade", 5),
-  Qualitativa = c('Genero', 'Renda_familiar', 'Escolaridade', 'Trabalha', 'Dificuldade_Financeira')
+  Qualitativa = c('Frutas', 'Legumes_Verduras', 'Bebidas_Alcoolicas', 'Produtos_Industrializados', 'Doces')
 )
 
 labels_desfechos <- list(
@@ -348,7 +348,7 @@ plot_bivariado <- function(exp, desf) {
     geom_density_ridges(alpha = 0.8, show.legend = FALSE) + # alpha melhora a visualização
     scale_fill_manual(values = jama_colors) +
     labs(
-      title = paste("Distribuição de", exp, "por", col_label),
+      title = paste("Distribuição de", exp, "por consumo de", col_label),
       x = exp,
       y = col_label
     ) +
@@ -399,8 +399,7 @@ dados_clust <- dados %>%
 rec_kmeans <- recipe(~ ., data = dados_clust) %>%
   step_normalize(all_numeric_predictors())
 
-# 4. Especificar o modelo KMeans (ex: k = 3 clusters)
-spec_kmeans <- k_means(num_clusters = 3) %>%
+spec_kmeans <- k_means(num_clusters = 2) %>%
   set_engine("stats")
 
 # 5. Criar o Workflow e ajustar o modelo
@@ -419,14 +418,14 @@ dados_com_clusters <- augment(fit_kmeans, new_data = dados_clust)
 # extract_centroids(fit_kmeans)
 
 
-dados = dados %>%
+dadosc = dados %>%
   bind_cols(dados_com_clusters %>% select(.pred_cluster))
 
 ```
 
 ```{r}
 tbl_summary(
-    data = dados %>%
+    data = dadosc %>%
       select(all_of(c("Frutas", "Legumes_Verduras", 
                       "Bebidas_Alcoolicas","Produtos_Industrializados",
                       "Doces" )), .pred_cluster)
@@ -441,7 +440,7 @@ tbl_summary(
 
 ```{r}
 tbl_summary(
-    data = dados %>%
+    data = dadosc %>%
       select(all_of(c('Genero', 'Renda_familiar','Escolaridade',
                       'Trabalha', 'Idade', 'Dificuldade_Financeira')), .pred_cluster)
     ,
@@ -483,6 +482,67 @@ Ou seja, podemos separar os respondentes dos questionários em 3 grupos:
   - Maior proporção de dificuldade financeira.
   - Idades mais dispersa (p25 = 21 e p75 = 44)
 
+
+# Principais Achados
+
+### Quem mudou de hábito na pandemia?
+
+- 1735 das 2359 pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia;
+- As mulheres mudaram mais seus hábitos alimentares do que os homens;
+- Famílias com renda de até R$ 1254,00 apresentaram maior mudança de hábitos e famílias com renda maior do que R$8640,00 apresentaram uma maior proporção do preenchimento de ‘Não mudança de hábito’;
+- Altas escolaridades apresentaram maior proporção de não mudança de hábito e baixas escolaridades apresentaram maior proporção de mudança de hábito;
+- Quem não trabalha teve maior proporção de mudança de hábito;
+- A média de idade em quem mudou de hábito é menor e concentrada entre 22 - 39;
+- Quem passou por dificuldade financeira apresentou maior mudança de hábito. Quem não passou por dificuldade financeira não passou por mudança de hábito;
+
+Ou seja, podemos observar o seguinte recorte em quem reportou mudança de hábito: menor renda, menor escolaridade, não exercia atividade laboral e relatou dificuldade financeira.
+
+
+### Principais características de quem mudou seus hábitos alimentares na pandemia
+
+ Pessoas com renda familiar entre R$ 1.255 - R$ 8.640, ensino médio completo ou pós graduação, que trabalhavam e não passaram por dificuldade financeira durante a pandemia compoe o perfil de quem responder ter mudado os hábitos alimentares nesse período.
+
+### Como se deu o consumo dos grupos alimentares
+
+Pudemos observar um aumento no consumo de todos os alimentos selecionados, com destaque para Doces, onde mais de 50% relataram aumento no seu consumo.
+
+O consumo de bebidas alcoolicas, frutas, legumes/verduras aumentou conforme aumentava a escolaridade do respondente. Além disso, a maior proporção de 'Não tenho hábito' no consumode de produtos industrializados foi nos respondentes pós graduados.
+O consumo de bebidas alcoolicas, produtos industrializados e doces foi menor dentre as pessoas que trabalham.
+O consumo de todos os alimentos selecionados diminuiu dentre que passou por dificuldades financeiras.
+O consumo de todos os alimentos selecionados, exceto produtos industrializados, aumentou dentre as pessoas de maior renda familiar (mais de R$ 8640,00).
+Já a distribuição das idades foi bem similar para cada categoria de consumo alimentar listada.
+
+
+O complemento dessas análises foi feito via clusterização.
+
+### Clusterização para avaliar a direção da mudança de hábito
+
+Via clusterização foi possível identificar três grupos:
+
+- Mudança generalizada
+- Mudanças para maus hábitos
+- Mudanças para bons hábitos
+
+**Mudança generalizada**
+
+Aumentou o consumo de de frutas, legumes/verduras, bebidas alcoolicas e doces. Enquanto não alterou o consumo de produtos industrializados.
+
+Esse grupo é caracterizado por maior proporção de alta renda familiar e pós graduados, e menor proporção de não trabalha dificuldade financeira na pandemia.
+
+**Mudanças para maus hábitos**
+
+Aumentou o consumo de bebidas alcoolicas, produtos industrializados e doces. Enquanto diminuiu o consumo de frutas e legumes/verduras
+
+Esse grupo é caracterizado por uma menor proporção de alta renda familiar, maior proporção de dificuldade financeira na pandemia e possui as idades mais concentradas com percentil 25 em 22 e percentil 75 em 37.
+
+**Mudanças para bons hábitos**
+
+Aumentou o consumo de frutas e legumes/verduras. Enquanto diminuiu o consumode de bebidas alcoolicas, produtos industrializados e doces.
+
+Esse grupo é caracterizado por uma menor proporção de alta renda familiar, maior proporção de não-trabalho e maior proporção de dificuldade financeira. Além disso, as idades mais dispersa com percentil 25 em 21 e percentil 75 em 44.
+
+
+Podemos observar que foi possível identificar um grupo que mudou para bons hábitos e outro que mudou para maus hábitos.
 
 
 # Apendice
@@ -616,4 +676,14 @@ kable(resultado_regressao$tabela_resultados,
 ```
 
 A criação desse escore não foi uma boa estratégia para diferenciar essas características.
+
+
+
+
+
+
+
+
+
+
 

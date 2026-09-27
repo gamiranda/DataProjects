@@ -134,10 +134,10 @@ dadosc = dados %>%
 
 ### Variáveis utilizadas:
 
-- Explicativas: Genero, Raca_cor, Regiao, Renda_familiar, Escolaridade, Trabalha, Idade, Peso e Dificuldade_Financeira.
-- Desfechos: Alteracao_Pandemia, Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Produtos_Industrializados e Doces.
-    - Bons hábitos: Frutas e Legumes_Verduras;
-    - Maus hábitos: Bebidas_Alcoolicas, Produtos_Industrializados e Doces.
+- Explicativas: Genero, Raça/Cor, Região, Renda Familiar, Escolaridade, Trabalha, Idade, Peso e Dificuldade Financeira.
+- Desfechos: Alteração na Pandemia, Frutas, Legumes/Verduras, Bebidas Alcoolicas, Produtos Industrializados e Doces.
+    - Bons hábitos: Frutas e Legumes/Verduras;
+    - Maus hábitos: Bebidas Alcoolicas, Produtos Industrializados e Doces.
 
 :::
 
@@ -149,14 +149,14 @@ dadosc = dados %>%
 |--------|---------------------------------|
 | `readxl` | Leitura e importação dos dados em arquivos Excel |
 | `dplyr` | Manipulação, transformação, filtragem e sumarização dos dados |
+| `tidyverse` | Conjunto de ferramentas para manipulação, organização e análise dos dados |
 | `ggplot2` | Construção dos gráficos estatísticos |
 | `ggstats` | Inclusão de estatísticas e informações adicionais nos gráficos |
-| `tidyverse` | Conjunto de ferramentas para manipulação, organização e análise dos dados |
+| `fmsb` | Construção do radar plot para visualização dos clusters |
+| `patchwork` | Combinação e organização de múltiplos gráficos em uma mesma figura |
+| `gtsummary` | Produção de tabelas estatísticas descritivas e testes de associação |
 | `tidymodels` | Preparação dos dados e estruturação dos modelos de análise |
 | `tidyclust` | Implementação dos métodos de clusterização |
-| `fmsb` | Construção do radar plot para visualização dos clusters |
-| `gtsummary` | Produção de tabelas estatísticas descritivas e testes de associação |
-| `patchwork` | Combinação e organização de múltiplos gráficos em uma mesma figura |
 
 :::
 
@@ -232,7 +232,7 @@ tbl_summary(
 
 #### Filtrando somente que declarou alteração de hábito na pandemia e selecionando as variáveis
 
-O objetivo do estudo é entender o perfil de quem mudou os hábitos alimentares durante a pandemia e verificar o sentido dessa mudança (bons ou maus hábito), então todas as visualizações a seguir levarão em consideração somente quem respondeu "Alteracao_Pandemia = Sim".
+> O objetivo do estudo é entender o perfil de quem mudou os hábitos alimentares durante a pandemia e verificar o sentido dessa mudança (bons ou maus hábito), então todas as visualizações a seguir levarão em consideração somente quem respondeu "Alteracao_Pandemia = Sim".
 
 :::
 
@@ -387,7 +387,7 @@ nomes_desfechos <- c(
   "Legumes_Verduras"     = "Legumes e Verduras",
   "Bebidas_Alcoolicas"       = "Bebidas Alcoolicas",
   "Produtos_Industrializados"           = "Produtos Industrializados",
-  "Doces" = "Dificuldade Doces"
+  "Doces" = "Doces"
 )
 
 resultados <- expand.grid(Explicativa = explicativas, Desfecho = desfechos, stringsAsFactors = FALSE) %>%

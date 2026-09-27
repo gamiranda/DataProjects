@@ -18,14 +18,14 @@
     "href": "quarto_archives/projeto1_apresentacao.html#dados-e-variáveis-utilizadas",
     "title": "Pandemia e alimentação: mudanças para melhor ou para pior?",
     "section": "DADOS E VARIÁVEIS UTILIZADAS",
-    "text": "DADOS E VARIÁVEIS UTILIZADAS\n\nVariáveis utilizadas:\n\nExplicativas: Genero, Raca_cor, Regiao, Renda_familiar, Escolaridade, Trabalha, Idade, Peso e Dificuldade_Financeira.\nDesfechos: Alteracao_Pandemia, Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Produtos_Industrializados e Doces.\n\nBons hábitos: Frutas e Legumes_Verduras;\nMaus hábitos: Bebidas_Alcoolicas, Produtos_Industrializados e Doces."
+    "text": "DADOS E VARIÁVEIS UTILIZADAS\n\nVariáveis utilizadas:\n\nExplicativas: Genero, Raça/Cor, Região, Renda Familiar, Escolaridade, Trabalha, Idade, Peso e Dificuldade Financeira.\nDesfechos: Alteração na Pandemia, Frutas, Legumes/Verduras, Bebidas Alcoolicas, Produtos Industrializados e Doces.\n\nBons hábitos: Frutas e Legumes/Verduras;\nMaus hábitos: Bebidas Alcoolicas, Produtos Industrializados e Doces."
   },
   {
     "objectID": "quarto_archives/projeto1_apresentacao.html#pacotes-utilizados",
     "href": "quarto_archives/projeto1_apresentacao.html#pacotes-utilizados",
     "title": "Pandemia e alimentação: mudanças para melhor ou para pior?",
     "section": "PACOTES UTILIZADOS",
-    "text": "PACOTES UTILIZADOS\n\n\n\n\n\n\n\n\nPacote\nPrincipal utilização no projeto\n\n\n\n\nreadxl\nLeitura e importação dos dados em arquivos Excel\n\n\ndplyr\nManipulação, transformação, filtragem e sumarização dos dados\n\n\nggplot2\nConstrução dos gráficos estatísticos\n\n\nggstats\nInclusão de estatísticas e informações adicionais nos gráficos\n\n\ntidyverse\nConjunto de ferramentas para manipulação, organização e análise dos dados\n\n\ntidymodels\nPreparação dos dados e estruturação dos modelos de análise\n\n\ntidyclust\nImplementação dos métodos de clusterização\n\n\nfmsb\nConstrução do radar plot para visualização dos clusters\n\n\ngtsummary\nProdução de tabelas estatísticas descritivas e testes de associação\n\n\npatchwork\nCombinação e organização de múltiplos gráficos em uma mesma figura"
+    "text": "PACOTES UTILIZADOS\n\n\n\n\n\n\n\n\nPacote\nPrincipal utilização no projeto\n\n\n\n\nreadxl\nLeitura e importação dos dados em arquivos Excel\n\n\ndplyr\nManipulação, transformação, filtragem e sumarização dos dados\n\n\ntidyverse\nConjunto de ferramentas para manipulação, organização e análise dos dados\n\n\nggplot2\nConstrução dos gráficos estatísticos\n\n\nggstats\nInclusão de estatísticas e informações adicionais nos gráficos\n\n\nfmsb\nConstrução do radar plot para visualização dos clusters\n\n\npatchwork\nCombinação e organização de múltiplos gráficos em uma mesma figura\n\n\ngtsummary\nProdução de tabelas estatísticas descritivas e testes de associação\n\n\ntidymodels\nPreparação dos dados e estruturação dos modelos de análise\n\n\ntidyclust\nImplementação dos métodos de clusterização"
   },
   {
     "objectID": "quarto_archives/projeto1_apresentacao.html#resultados",
@@ -53,7 +53,7 @@
     "href": "quarto_archives/projeto1_apresentacao.html#resultados-3",
     "title": "Pandemia e alimentação: mudanças para melhor ou para pior?",
     "section": "RESULTADOS",
-    "text": "RESULTADOS\n\nFiltrando somente que declarou alteração de hábito na pandemia e selecionando as variáveis\nO objetivo do estudo é entender o perfil de quem mudou os hábitos alimentares durante a pandemia e verificar o sentido dessa mudança (bons ou maus hábito), então todas as visualizações a seguir levarão em consideração somente quem respondeu “Alteracao_Pandemia = Sim”."
+    "text": "RESULTADOS\n\nFiltrando somente que declarou alteração de hábito na pandemia e selecionando as variáveis\n\nO objetivo do estudo é entender o perfil de quem mudou os hábitos alimentares durante a pandemia e verificar o sentido dessa mudança (bons ou maus hábito), então todas as visualizações a seguir levarão em consideração somente quem respondeu “Alteracao_Pandemia = Sim”."
   },
   {
     "objectID": "quarto_archives/projeto1_apresentacao.html#resultados-4",

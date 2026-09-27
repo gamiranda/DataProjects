@@ -427,7 +427,6 @@ tbl_summary(
   modify_caption("Descritiva das variáveis explicativas para os Clusters")
 ```
 
-CRIAR RADAR PLOT
 
 
 ```{r}
@@ -492,7 +491,78 @@ radarchart(
     "Bebidas\nAlcoólicas",
     "Produtos\nIndustrializados",
     "Doces"
-  )
+  ), 
+  title = "Aumento de consumo"
+)
+
+legend(
+  "topright",
+  legend = Radar_df$.pred_cluster,
+  bty = "n",
+  pch = 20,
+  col = colors_border,
+  text.col = "black",
+  cex = 1.1,
+  pt.cex = 1.5
+)
+
+```
+
+```{r}
+Radar_df <- dadosc %>%
+  mutate(.pred_cluster = if_else(.pred_cluster == "Cluster_1", "Cluster 1", "Cluster 2")) %>%
+  group_by(.pred_cluster) %>%
+  summarise(
+    across(
+      all_of(variaveis_radar),
+      ~ mean(.x == "Diminuiu", na.rm = TRUE) * 100
+    )
+  ) %>%
+  ungroup()
+
+Radar <- Radar_df %>%
+  select(-.pred_cluster) %>%
+  as.data.frame()
+
+Radar <- rbind(
+  rep(100, length(variaveis_radar)),
+  rep(0, length(variaveis_radar)),
+  Radar
+)
+
+n_clusters <- nrow(Radar_df)
+
+colors_border <- c(
+  jama_colors
+)[seq_len(n_clusters)]
+
+colors_in <- paste0(
+  colors_border,
+  "66"
+)
+
+radarchart(
+  Radar,
+  axistype = 1,
+  pcol = colors_border,
+  pfcol = colors_in,
+  plwd = 3,
+  plty = 1,
+  cglcol = "grey70",
+  cglty = 1,
+  cglwd = 0.8,
+  axislabcol = "grey30",
+  caxislabels = seq(0, 100, 25),
+  calcex = 0.8,
+  vlcex = 0.9,
+  vlabels = c(
+    "Frutas",
+    "Legumes e\nVerduras",
+    "Bebidas\nAlcoólicas",
+    "Produtos\nIndustrializados",
+    "Doces"
+  ), 
+  title = "Diminuição de consumo"
 )
 
 legend(

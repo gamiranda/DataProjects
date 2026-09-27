@@ -1,13 +1,20 @@
 ---
-title: "As mudanças de hábitos alimentares na pandemia foram para bons ou maus hábitos?"
+title: "Pandemia e alimentação: mudanças para melhor ou para pior?"
 author: "Gabriel Miranda"
+date: "2026-09-28"
+date-format: "DD/MM/YYYY"
 format:
   revealjs:
-    css: custom.css
+    logo: images/logo.png
+    footer: "[https://github.com/gamiranda/DataProjects](https://github.com/gamiranda/DataProjects)"
+    css: docs/custom_s.css
     slide-number: true
     incremental: false
     transition: slide
     background-transition: fade
+    width: 1280
+    height: 720
+    margin: 0.07
     auto-stretch: false
 execute:
   echo: false
@@ -18,15 +25,14 @@ execute:
 ```{r}
 library(readxl)
 library(dplyr)
-library(tidyr)
 library(ggplot2)
 library(ggstats)
 library(tidyverse)
-library(knitr)
-#library(stringr)
+library(tidymodels)
+library(tidyclust)
+library(fmsb)
 library(gtsummary)
 library(patchwork)
-library(gt)
 
 dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
 
@@ -61,34 +67,70 @@ labels_desfechos <- list(
   Produtos_Industrializados = "Produtos Industrializados",
   Doces = "Doces"
 )
+
+set.seed(2026)
+dados_clust <- dados %>%
+  select(Frutas, Legumes_Verduras, Bebidas_Alcoolicas, Produtos_Industrializados, Doces) %>%
+  mutate(across(everything(), ~ case_when(
+    . == "Não tenho o hábito" ~ 0,
+    . == "Diminuiu"           ~ 1,
+    . == "Não alterou"        ~ 2,
+    . == "Aumentou"           ~ 3,
+    TRUE                      ~ NA_real_
+  )))
+
+rec_kmeans <- recipe(~ ., data = dados_clust) %>%
+  step_normalize(all_numeric_predictors())
+
+spec_kmeans <- k_means(num_clusters = 2) %>%
+  set_engine("stats")
+
+wf_kmeans <- workflow() %>%
+  add_recipe(rec_kmeans) %>%
+  add_model(spec_kmeans)
+
+fit_kmeans <- wf_kmeans %>% fit(data = dados_clust)
+
+dados_com_clusters <- augment(fit_kmeans, new_data = dados_clust)
+
+dadosc = dados %>%
+  bind_cols(dados_com_clusters %>% select(.pred_cluster))
 ```
 
 
 ## **INTRODUÇÃO E CONTEXTUALIZAÇÃO**
 
+::: {.texto-menor}
+
 ### Coleta e Origem
-Dados coletados em 2022 por alunas da pós-graduação em Nutrição da Universidade Federal Fluminense (UFF).
+> Dados coletados em 2022 por alunas da pós-graduação em Nutrição da Universidade Federal Fluminense (UFF).
 
 ### Amostra Coletada
-Questionário online composto por 2.359 indivíduos e 15 variáveis sociodemográficas e comportamentais.
+> Questionário online composto por `r nrow(dados0)` indivíduos e `r ncol(dados0)` variáveis sociodemográficas e comportamentais.
 
 ### Foco da Análise
-Identificar quem alterou a alimentação na pandemia e a direção dessa alteração (hábitos saudáveis vs não saudáveis).
+> Identificar quem alterou a alimentação na pandemia e a direção dessa alteração (hábitos saudáveis vs não saudáveis).
 
+:::
 
 ## **OBJETIVOS DA ANÁLISE**
 
+::: {.texto-menor}
+
 ### Perfil de mudança
-Mapear características sociodemográficas associadas ao relato de alteração nos hábitos alimentares.
+> Mapear características sociodemográficas associadas ao relato de alteração nos hábitos alimentares.
 
 ### Variação dos Grupos
-Avaliar os padrões de consumo em determinados alimentos chave para se classificar a mudança de hábito.
+> Avaliar os padrões de consumo em determinados alimentos chave para se classificar a mudança de hábito.
 
 ### Clusterização
-Agrupar os indivíduos via K-Means e correlacionar aos fatores socioeconômicos.
+> Agrupar os indivíduos via K-Means e correlacionar aos fatores socioeconômicos.
 
+:::
 
 ## **DADOS E VARIÁVEIS UTILIZADAS**
+
+::: {.texto-menor}
 
 ### Variáveis utilizadas:
 
@@ -97,22 +139,26 @@ Agrupar os indivíduos via K-Means e correlacionar aos fatores socioeconômicos.
     - Bons hábitos: Frutas e Legumes_Verduras;
     - Maus hábitos: Bebidas_Alcoolicas, Produtos_Industrializados e Doces.
 
+:::
 
 ## **PACOTES UTILIZADOS**
 
-- readxl
-- dplyr
-- ggplot2
-- tidyr
-- knitr
-- stringr
-- gtsummary
-- tidyverse
-- ggstats
-- ggridges
-- tidymodels
-- tidyclust
-- MASS
+::: {.texto-menor}
+
+| Pacote | Principal utilização no projeto |
+|--------|---------------------------------|
+| `readxl` | Leitura e importação dos dados em arquivos Excel |
+| `dplyr` | Manipulação, transformação, filtragem e sumarização dos dados |
+| `ggplot2` | Construção dos gráficos estatísticos |
+| `ggstats` | Inclusão de estatísticas e informações adicionais nos gráficos |
+| `tidyverse` | Conjunto de ferramentas para manipulação, organização e análise dos dados |
+| `tidymodels` | Preparação dos dados e estruturação dos modelos de análise |
+| `tidyclust` | Implementação dos métodos de clusterização |
+| `fmsb` | Construção do radar plot para visualização dos clusters |
+| `gtsummary` | Produção de tabelas estatísticas descritivas e testes de associação |
+| `patchwork` | Combinação e organização de múltiplos gráficos em uma mesma figura |
+
+:::
 
 ## **RESULTADOS**
 
@@ -137,7 +183,8 @@ tbl_summary(
   add_p(
     test = list(all_categorical() ~ "chisq.test"),
     pvalue_fun = ~ style_pvalue(.x, digits = 3)
-  )
+  ) %>%
+    remove_footnote_header(columns = everything())
 
 
 ```
@@ -171,32 +218,50 @@ tbl_summary(
 
 ```
 
+## **RESULTADOS**
+
+::: {.texto-menor}
+
+> **Perfil Geral de Mudança:** Pessoas que alteraram hábitos alimentares tinham predominantemente renda média/ (R$ 1,2 mil a R$ 8,6 mil+), ensino médio completo, não trabalhavam e enfrentaram dificuldades financeiras se comparadas a quem não mudou seus hábitos alimentares.
+
+:::
 
 ## **RESULTADOS**
+
+::: {.texto-menor}
 
 #### Filtrando somente que declarou alteração de hábito na pandemia e selecionando as variáveis
 
-O objetivo do estudo é entender o perfil de quem mudou os hábitos alimentares durante a pandemia e verificar o sentido dessa mudança (bons ou maus hábito), então todas as visualizações a seguir levarão em consideração somente quem respondeu "Alteracao_Pandemia = Sim"
+O objetivo do estudo é entender o perfil de quem mudou os hábitos alimentares durante a pandemia e verificar o sentido dessa mudança (bons ou maus hábito), então todas as visualizações a seguir levarão em consideração somente quem respondeu "Alteracao_Pandemia = Sim".
+
+:::
 
 
 ## **RESULTADOS**
+
+::: {.texto-menor}
 
 #### Perfil sociodemográfico
 
 :::: columns
 
 ::: {.column width="50%"}
-- `r nrow(dados)` das `r nrow(dados0)` pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia.
+> `r nrow(dados)` das `r nrow(dados0)` pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia.
 :::
 
 ::: {.column width="50%"}
-- Renda familiar entre R$ 1.255 - R$ 8.640
-- Ensino médio completo ou pós graduação
-- Trabalhavam durante a pandemia
-- Não passaram por dificuldades financeiras durante a pandemia
+> Renda familiar entre R$ 1.255 - R$ 8.640;
+
+> Ensino médio completo ou pós graduação;
+
+> Trabalhavam durante a pandemia;
+
+> Não passaram por dificuldades financeiras durante a pandemia.
 :::
 
 ::::
+
+:::
 
 ## **RESULTADOS**
 
@@ -230,7 +295,8 @@ table2 <- dados %>%
     add_stat(fns = everything() ~ p_aderencia) %>% # <--- Adiciona o teste customizado
   modify_header(p.value ~ "**Valor-p**") %>%
   # modify_caption("Proporção das categorias nas variáveis desfecho") %>%  
-  bold_labels()
+  bold_labels() %>%
+  remove_footnote_header(columns = everything())
 
 table2
 ```
@@ -262,7 +328,8 @@ table2 <- dados %>%
     add_stat(fns = everything() ~ p_aderencia) %>% # <--- Adiciona o teste customizado
   modify_header(p.value ~ "**Valor-p**") %>%
   # modify_caption("Proporção das categorias nas variáveis desfecho") %>%  
-  bold_labels()
+  bold_labels() %>%
+  remove_footnote_header(columns = everything())
 
 table2
 ```
@@ -298,16 +365,16 @@ table2 <- dados %>%
 table2
 ```
 
+<div class="interpretacao">
+Os valores-p muito pequenos indicam que as proporções nas respostas são
+significativamente diferentes. Podemos observar um aumento no consumo de
+todos os alimentos selecionados, com destaque para Doces, onde mais de 50%
+relataram aumento no seu consumo.
+</div>
 
 :::
 
 ::::
-
-## **RESULTADOS**
-
-#### Como se deu o consumo dos grupos alimentares
-
-Os valores-p muito pequenos indicam que as proporções nas respostas são sigficativamente diferentes. Podemos observar um aumento no consumo de todos os alimentos selecionados, com destaque para Doces, onde mais de 50% relataram aumento no seu consumo.
 
 ## **RESULTADOS**
 
@@ -411,7 +478,7 @@ graficos <- map2(relacoes_significativas$Explicativa,
 ```{r}
 
 (graficos[[16]] + theme(axis.text.x = element_blank()) + graficos[[19]] + labs(y="") + theme(axis.text.x = element_blank())) /
-(plot_spacer() + graficos[[17]] + plot_spacer()) 
+(plot_spacer() + graficos[[17]] + plot_spacer()) +
   
   plot_layout(
     guides = "collect"
@@ -423,17 +490,202 @@ graficos <- map2(relacoes_significativas$Explicativa,
 
 ```
 
+## **RESULTADOS**
+
+##### **Dificuldade Financeira:**
+```{r }
+
+(graficos[[21]] + theme(axis.text.x = element_blank()) + graficos[[22]]+ labs(y="") + theme(axis.text.x = element_blank()) + graficos[[23]]+ labs(y="") + theme(axis.text.x = element_blank()))  /
+(graficos[[24]] + graficos[[25]]+ labs(y="")) +
+  
+  plot_layout(
+    guides = "collect"
+  ) &
+  
+  theme(
+    legend.position = "bottom"
+  )
+
+```
+
+## **RESULTADOS**
+
+##### **Renda Familiar:**
+```{r}
+
+(graficos[[6]] + theme(axis.text.x = element_blank()) + graficos[[7]]+ labs(y="") + theme(axis.text.x = element_blank()) + graficos[[8]]+ labs(y="") + theme(axis.text.x = element_blank()))  /
+(graficos[[9]] + graficos[[10]]+ labs(y="")) +
+  
+  plot_layout(
+    guides = "collect"
+  ) &
+  
+  theme(
+    legend.position = "bottom"
+  )
+
+```
+
+## **RESULTADOS**
+
+##### **Clusterização:**
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+
+variaveis_radar <- c(
+  "Frutas",
+  "Legumes_Verduras",
+  "Bebidas_Alcoolicas",
+  "Produtos_Industrializados",
+  "Doces"
+)
+
+Radar_df <- dadosc %>%
+  mutate(.pred_cluster = if_else(.pred_cluster == "Cluster_1", "Cluster 1", "Cluster 2")) %>%
+  group_by(.pred_cluster) %>%
+  summarise(
+    across(
+      all_of(variaveis_radar),
+      ~ mean(.x == "Aumentou", na.rm = TRUE) * 100
+    )
+  ) %>%
+  ungroup()
+
+Radar <- Radar_df %>%
+  select(-.pred_cluster) %>%
+  as.data.frame()
+
+Radar <- rbind(
+  rep(100, length(variaveis_radar)),
+  rep(0, length(variaveis_radar)),
+  Radar
+)
+
+n_clusters <- nrow(Radar_df)
+
+colors_border <- c(
+  jama_colors
+)[seq_len(n_clusters)]
+
+colors_in <- paste0(
+  colors_border,
+  "66"
+)
+
+radarchart(
+  Radar,
+  axistype = 1,
+  pcol = colors_border,
+  pfcol = colors_in,
+  plwd = 3,
+  plty = 1,
+  cglcol = "grey70",
+  cglty = 1,
+  cglwd = 0.8,
+  axislabcol = "grey30",
+  caxislabels = seq(0, 100, 25),
+  calcex = 0.8,
+  vlcex = 0.9,
+  vlabels = c(
+    "Frutas",
+    "Legumes e\nVerduras",
+    "Bebidas\nAlcoólicas",
+    "Produtos\nIndustrializados",
+    "Doces"
+  )
+)
+
+legend(
+  "topright",
+  legend = Radar_df$.pred_cluster,
+  bty = "n",
+  pch = 20,
+  col = colors_border,
+  text.col = "black",
+  cex = 1.1,
+  pt.cex = 1.5
+)
+```
+
+## **RESULTADOS**
+
+##### **Clusterização:**
+
+::: {.column width="50%"}
+```{r}
+tbl_summary(
+    data = dadosc %>%
+      select(all_of(c('Genero', 'Renda_familiar','Escolaridade')), .pred_cluster)
+    ,
+    by = ".pred_cluster",
+    statistic = list(all_categorical() ~ "{n} ({p}%)",
+                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+    label = list(
+        Genero ~ "Gênero",
+        Renda_familiar ~ "Renda familiar",
+        Escolaridade ~ "Escolaridade"
+    )      
+) %>%
+  modify_caption("Descritiva das variáveis explicativas para os Clusters") %>%
+    remove_footnote_header(columns = everything())
 
 
+```
 
-Pudemos observar um aumento no consumo de todos os alimentos selecionados, com destaque para Doces, onde mais de 50% relataram aumento no seu consumo.
+:::
 
-#O consumo de bebidas alcoolicas, frutas, legumes/verduras aumentou conforme aumentava a escolaridade do respondente. Além #disso, a maior proporção de 'Não tenho hábito' no consumode de produtos industrializados foi nos respondentes pós graduados.
+::: {.column width="50%"}
 
-#O consumo de bebidas alcoolicas, produtos industrializados e doces foi menor dentre as pessoas que trabalham.
+```{r}
+tbl_summary(
+    data = dadosc %>%
+      select(all_of(c('Trabalha', 'Idade', 'Dificuldade_Financeira')), .pred_cluster)
+    ,
+    by = ".pred_cluster",
+    statistic = list(all_categorical() ~ "{n} ({p}%)",
+                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+    label = list(
+        Trabalha ~ "Trabalha",
+        Idade ~ "Idade (anos)",
+        Dificuldade_Financeira ~ "Dificuldade financeira"
+    )      
+) %>%
+  modify_caption("Descritiva das variáveis explicativas para os Clusters")
+```
 
-O consumo de todos os alimentos selecionados diminuiu dentre que passou por dificuldades financeiras.
+:::
 
-O consumo de todos os alimentos selecionados, exceto produtos industrializados, aumentou dentre as pessoas de maior renda familiar (mais de R$ 8640,00).
+## **PRINCIPAIS ACHADOS**
 
-Já a distribuição das idades foi bem similar para cada categoria de consumo alimentar listada.
+::: {.texto-menor}
+
+> Foi possível identificar um recorte social tanto em quem mudou os hábitos alimentares quanto em quem mudou para bons hábitos.
+
+- **Perfil Geral de Mudança:** Pessoas que alteraram hábitos alimentares tinham predominantemente renda média/ (R$ 1,2 mil a R$ 8,6 mil+), ensino médio completo, não trabalhavam e enfrentaram dificuldades financeiras se comparadas a quem não mudou seus hábitos alimentares.
+
+- **Comportamento Geral:** Aumento no consumo de todos os grupos alimentares analisados, com destaque para doces (aumento em mais de 50% dos casos).
+
+:::
+
+
+## **PRINCIPAIS ACHADOS**
+
+> Impacto Econômico e Social:
+
+- Dificuldade financeira tem relação com a diminuição no consumo de todos os alimentos.
+
+- Maior renda e escolaridade associaram-se ao maior consumo de frutas, legumes e bebidas alcoólicas, além de menor consumo de industrializados.
+
+## **PRINCIPAIS ACHADOS**
+
+> Divisão dos Hábitos (Clusterização):
+
+- **Mudanças Positivas (Bons Hábitos):** Aumento de frutas e legumes; redução/manutenção de álcool e industrializados. Perfil: maior renda, pós-graduação, mais velhos (75% até 42 anos), sem dificuldades financeiras.
+
+- **Mudanças Negativas (Maus Hábitos):** Aumento de álcool, doces e industrializados; redução de frutas e legumes. Perfil: menor renda, escolaridade até o ensino médio, mais jovens (75% até 37 anos) e afetados financeiramente.
+
+## **LIMITAÇÕES DO ESTUDO**
+
+> A maior parte da base é de mulheres brancas da região sul/sudeste. Além disso, a proporção de pessoas com pós graduação é muito semelhante a proporção de pessoas com ensino médio completo. Essa amostra não é representativa para o Brasil, então a interpretação levou essa limitação em consideração.

@@ -17,8 +17,8 @@ about:
 
 ### Projects
 
-* **[Projeto 1 - ECD Análise de Dados](quarto_archives/projeto1_analisededados.qmd)**
-  Projeto 1 da disciplina de Análise de Dados da ECD - Relatório
+* **[Projeto 1 - ECD Análise de Dados - Relatório](quarto_archives/projeto1_analisededados.qmd)**
+  Projeto 1 da disciplina de Análise de Dados da ECD
 
-* **[Projeto 1 - ECD Análise de Dados](quarto_archives/projeto1_apresentacao.qmd)**
-Projeto 1 da disciplina de Análise de Dados da ECD - Apresentação
+* **[Projeto 1 - ECD Análise de Dados - Apresentação](quarto_archives/projeto1_apresentacao.qmd)**
+Projeto 1 da disciplina de Análise de Dados da ECD

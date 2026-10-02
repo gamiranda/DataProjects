@@ -6,7 +6,7 @@ date-format: "DD/MM/YYYY"
 format:
   revealjs:
     logo: images/logo.png
-    footer: "[https://github.com/gamiranda/DataProjects](https://github.com/gamiranda/DataProjects)"
+    footer: "[https://www.linkedin.com/in/ga-miranda/](https://www.linkedin.com/in/ga-miranda/)"
     css: docs/custom_s.css
     slide-number: true
     incremental: false
@@ -170,7 +170,7 @@ tbl_summary(
       select(all_of(c('Genero', 'Renda_familiar', 'Escolaridade')), "Alteracao_Pandemia"),
     by = "Alteracao_Pandemia",
     statistic = list(all_categorical() ~ "{n} ({p}%)",
-                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+                     all_continuous() ~ "{median} [{p25} - {p75}]"),
     label = list(
         Genero ~ "Gênero",
         Renda_familiar ~ "Renda Familiar",
@@ -181,7 +181,6 @@ tbl_summary(
     modify_header(label ~ "**Variáveis**") %>%
     bold_labels() %>%
     # modify_caption("Descritiva das variáveis explicativas na amostra") %>%
-    modify_footnote(all_stat_cols() ~ "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP).") %>%
   add_p(
     test = list(all_categorical() ~ "chisq.test"),
     pvalue_fun = ~ style_pvalue(.x, digits = 3)
@@ -200,7 +199,7 @@ tbl_summary(
       select(all_of(c('Trabalha', 'Idade', 'Dificuldade_Financeira')), "Alteracao_Pandemia"),
     by = "Alteracao_Pandemia",
     statistic = list(all_categorical() ~ "{n} ({p}%)",
-                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+                     all_continuous() ~ "{median} [{p25} - {p75}]"),
     label = list(
         Trabalha ~ "Trabalha",
         Idade ~ "Idade (anos)",
@@ -211,7 +210,6 @@ tbl_summary(
     modify_header(label ~ "**Variáveis**") %>%
     bold_labels() %>%
     # modify_caption("Descritiva das variáveis explicativas na amostra") %>%
-    modify_footnote(all_stat_cols() ~ "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP).") %>%
   add_p(
     test = list(all_categorical() ~ "chisq.test"),
     pvalue_fun = ~ style_pvalue(.x, digits = 3)
@@ -690,7 +688,7 @@ tbl_summary(
     ,
     by = ".pred_cluster",
     statistic = list(all_categorical() ~ "{n} ({p}%)",
-                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+                     all_continuous() ~ "{median} [{p25} - {p75}]"),
     label = list(
         Genero ~ "Gênero",
         Renda_familiar ~ "Renda familiar",
@@ -714,7 +712,7 @@ tbl_summary(
     ,
     by = ".pred_cluster",
     statistic = list(all_categorical() ~ "{n} ({p}%)",
-                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+                     all_continuous() ~ "{median} [{p25} - {p75}]"),
     label = list(
         Trabalha ~ "Trabalha",
         Idade ~ "Idade (anos)",

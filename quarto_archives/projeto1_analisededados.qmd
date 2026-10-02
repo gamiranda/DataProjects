@@ -33,17 +33,7 @@ library(tidyclust)
 dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
 
 theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",") 
-```
 
-\newpage
-
-# Introdução
-
-Em 2022, alunas do curso de pós-graduação em Nutrição da UFF coletam `r nrow(dados0)` respostas em um questionário online com `r ncol(dados0)` perguntas relacionadas a características sociodemográficas, condições vivenciadas durante a pandemia de COVID-19, características antropométricas e mudanças nos hábitos alimentares.
-
-O objetivo desse estudo é, a partir da base de dados coletada, responder a seguinte pergunta: As mudanças de hábito alimentares na pandemia foram para bons ou maus hábitos?
-
-```{r echo=TRUE, warning=FALSE, message=FALSE}
 explicativas = c(
      'Genero'
     ,'Raca_cor'
@@ -65,18 +55,25 @@ desfechos = c(
 )
 ```
 
-```{r, echo=TRUE, warning=FALSE, message=FALSE}
-dados0 = dados0 %>%
-    select(all_of(explicativas), all_of(desfechos))
-```
+\newpage
+
+# Introdução
+
+Em 2022, alunas do curso de pós-graduação em Nutrição da UFF coletam `r nrow(dados0)` respostas em um questionário online com `r ncol(dados0)` perguntas relacionadas a características sociodemográficas, condições vivenciadas durante a pandemia de COVID-19, características antropométricas e mudanças nos hábitos alimentares.
+
+O objetivo desse estudo é, a partir da base de dados coletada, responder a seguinte pergunta: As mudanças de hábito alimentares na pandemia foram para bons ou maus hábitos?
+
 
 ```{r warning=FALSE, message=FALSE}
+dados0 = dados0 %>%
+    select(all_of(explicativas), all_of(desfechos))
+
 tbl_summary(
     data = dados0 %>%
       select(all_of(explicativas), "Alteracao_Pandemia"),
     by = "Alteracao_Pandemia",
     statistic = list(all_categorical() ~ "{n} ({p}%)",
-                     all_continuous() ~ "{mean} [{p25} - {p75}]"),
+                     all_continuous() ~ "{median} [{p25} - {p75}]"),
     label = list(
         Genero ~ "Gênero",
         Raca_cor ~ "Raça/Cor",
@@ -92,7 +89,6 @@ tbl_summary(
     modify_header(label ~ "**Variáveis**") %>%
     bold_labels() %>%
     modify_caption("Descritiva das variáveis explicativas na amostra") %>%
-    modify_footnote(all_stat_cols() ~ "Variáveis qualitativas: n (%); Variáveis quantitativas: média (DP).") %>%
   add_p(
     test = list(all_categorical() ~ "chisq.test"),
     pvalue_fun = ~ style_pvalue(.x, digits = 3)
@@ -139,7 +135,7 @@ table1 <- dados %>%
   tbl_summary(
     statistic = list(
       all_categorical() ~ "{n} ({p}%)",
-      all_continuous() ~ "{mean} [{p25} - {p75}]"
+      all_continuous() ~ "{median} [{p25} - {p75}]"
     ),
     digits = list(
       all_continuous() ~ 2,
@@ -244,9 +240,7 @@ grafico_distribuicao <- function(df, col, labels_desfechos = list(), colors = ja
   
   return(grafico)
 }
-```
 
-```{r}
 for(i in 1:length( desfechos[2:length(desfechos)])){
   print(
     grafico_distribuicao(
@@ -307,13 +301,12 @@ plot_bivariado <- function(exp, desf) {
 graficos <- map2(relacoes_significativas$Explicativa, 
                  relacoes_significativas$Desfecho, 
                  plot_bivariado)
-```
 
-```{r}
 for(i in 1:length(graficos)){
   print(graficos[[i]])
 }
 ```
+
 
 ## Qualitativa x Quantitativas
 
@@ -352,14 +345,11 @@ plot_bivariado <- function(exp, desf) {
 graficos <- map2(variaveis$Quantitativa, 
                  variaveis$Qualitativa, 
                  plot_bivariado)
-```
 
-```{r}
 for(i in 1:length(graficos)){
   print(graficos[[i]])
 }
 ```
-
 
 # Clusterização 
 
@@ -422,7 +412,7 @@ tbl_summary(
     ,
     by = ".pred_cluster",
     statistic = list(all_categorical() ~ "{n} ({p}%)",
-                     all_continuous() ~ "{mean} [{p25} - {p75}]")      
+                     all_continuous() ~ "{median} [{p25} - {p75}]")      
 ) %>%
   modify_caption("Descritiva das variáveis explicativas para os Clusters")
 ```

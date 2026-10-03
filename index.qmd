@@ -1,6 +1,7 @@
 ---
 title: "Gabriel Miranda"
 subtitle: "Data Scientist"
+
 about:
   template: trestles
   links:
@@ -17,8 +18,6 @@ about:
 
 ### Projects
 
-* **[Projeto 1 - ECD Análise de Dados - Relatório](quarto_archives/projeto1_analisededados.qmd)**
-  Projeto 1 da disciplina de Análise de Dados da ECD
+- [Especialização](especializacao.qmd)
 
-* **[Projeto 1 - ECD Análise de Dados - Apresentação](quarto_archives/projeto1_apresentacao.qmd)**
-Projeto 1 da disciplina de Análise de Dados da ECD
+- [Personal Projects](personal-projects.qmd)

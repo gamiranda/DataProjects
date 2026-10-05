@@ -30,7 +30,7 @@ library(tidymodels)
 library(tidyclust) 
 #library(MASS)
 
-dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
+dados0 <- read_excel("\\quarto_archives\\DadosNutri.xlsx")
 
 theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",") 
 
@@ -62,7 +62,6 @@ desfechos = c(
 Em 2022, alunas do curso de pós-graduação em Nutrição da UFF coletam `r nrow(dados0)` respostas em um questionário online com `r ncol(dados0)` perguntas relacionadas a características sociodemográficas, condições vivenciadas durante a pandemia de COVID-19, características antropométricas e mudanças nos hábitos alimentares.
 
 O objetivo desse estudo é, a partir da base de dados coletada, responder a seguinte pergunta: As mudanças de hábito alimentares na pandemia foram para bons ou maus hábitos?
-
 
 ```{r warning=FALSE, message=FALSE}
 dados0 = dados0 %>%
@@ -98,16 +97,16 @@ tbl_summary(
 
 Sobre a alteração de hábitos alimentares na pandemia:
 
-- A maior parte das variáveis apresenta p-valor menor do que 0.05, indicando que essas variáveis são importantes para explicar as mudanças de hábito na pandemia
+-   A maior parte das variáveis apresenta p-valor menor do que 0.05, indicando que essas variáveis são importantes para explicar as mudanças de hábito na pandemia
 
-  - (Genero) As mulheres mudaram mais seus hábitos alimentares do que os homens.
-  - (Renda_familiar) Famílias com renda de até R$ 1254,00 apresentaram maior mudança de hábitos e famílias com renda maior do que R$8640,00 apresentaram uma maior proporção do preenchimento de 'Não mudança de hábito'.
-  - (Escolaridade) Altas escolaridades apresentaram maior proporção de não mudança de hábito e baixas escolaridades apresentaram maior proporção de mudança de hábito.
-  - (Trabalha) Quem não trabalha teve maior mudança de hábito.
-  - (Idade) A média de idade em quem mudou de hábito é menor e concentrada entre 22 - 39.
-  - (Dificuldade_Financeira) Quem passou por dificuldade financeira apresentou maior mudança de hábito. Quem não passou por dificuldade financeira não passou por mudança de hábito.
+    -   (Genero) As mulheres mudaram mais seus hábitos alimentares do que os homens.
+    -   (Renda_familiar) Famílias com renda de até R\$ 1254,00 apresentaram maior mudança de hábitos e famílias com renda maior do que R\$8640,00 apresentaram uma maior proporção do preenchimento de 'Não mudança de hábito'.
+    -   (Escolaridade) Altas escolaridades apresentaram maior proporção de não mudança de hábito e baixas escolaridades apresentaram maior proporção de mudança de hábito.
+    -   (Trabalha) Quem não trabalha teve maior mudança de hábito.
+    -   (Idade) A média de idade em quem mudou de hábito é menor e concentrada entre 22 - 39.
+    -   (Dificuldade_Financeira) Quem passou por dificuldade financeira apresentou maior mudança de hábito. Quem não passou por dificuldade financeira não passou por mudança de hábito.
 
-Pessoas que alteraram hábitos alimentares tinham predominantemente renda média/ (R$ 1,2 mil a R$ 8,6 mil+), ensino médio completo, não trabalhavam e enfrentaram dificuldades financeiras se comparadas a quem não mudou seus hábitos alimentares.
+Pessoas que alteraram hábitos alimentares tinham predominantemente renda média/ (R\$ 1,2 mil a R\$ 8,6 mil+), ensino médio completo, não trabalhavam e enfrentaram dificuldades financeiras se comparadas a quem não mudou seus hábitos alimentares.
 
 Disclaimer: A maior parte da base é de mulheres brancas da região sul/sudeste. Essa amostragem não é representativa para o Brasil, então a interpretação deve levar essa limitação em consideração. Além disso, a proporção de pessoas com pós graduação é muito semelhante a proporção de pessoas com ensino médio completo.
 
@@ -156,17 +155,17 @@ table1 <- dados %>%
 table1
 ```
 
-De modo geral, pessoas com renda familiar entre R$ 1.255 - R$ 8.640, ensino médio completo ou pós graduação, que trabalhavam e não passaram por dificuldade financeira durante a pandemia compoe o perfil de quem responder ter mudado os hábitos alimentares nesse período.
+De modo geral, pessoas com renda familiar entre R\$ 1.255 - R\$ 8.640, ensino médio completo ou pós graduação, que trabalhavam e não passaram por dificuldade financeira durante a pandemia compoe o perfil de quem responder ter mudado os hábitos alimentares nesse período.
 
 ## Mudanças alimentares
 
 Dentre as opções disponíveis no questionário, foram selecionadas as seguintes para classificar boa ou má mudança de hábito alimentar:
 
-- Frutas
-- Legumes e Verduras
-- Bebidas Alcoólicas
-- Produtos Industrializados
-- Doces
+-   Frutas
+-   Legumes e Verduras
+-   Bebidas Alcoólicas
+-   Produtos Industrializados
+-   Doces
 
 ```{r warning=FALSE, message=FALSE}
 p_aderencia <- function(data, variable, ...) {
@@ -307,7 +306,6 @@ for(i in 1:length(graficos)){
 }
 ```
 
-
 ## Qualitativa x Quantitativas
 
 ```{r}
@@ -351,12 +349,12 @@ for(i in 1:length(graficos)){
 }
 ```
 
-# Clusterização 
+# Clusterização
 
 Nessa seção foi aplicada a técnica de K-Means pra clusterização dos dados, onde foi possível identificar dois grupos:
 
-- Mudanças para bons hábitos
-- Mudanças para maus hábitos
+-   Mudanças para bons hábitos
+-   Mudanças para maus hábitos
 
 ```{r}
 set.seed(2026)
@@ -403,7 +401,6 @@ tbl_summary(
   modify_caption("Descritiva das variáveis desfecho para os Clusters") 
 ```
 
-
 ```{r}
 tbl_summary(
     data = dadosc %>%
@@ -416,8 +413,6 @@ tbl_summary(
 ) %>%
   modify_caption("Descritiva das variáveis explicativas para os Clusters")
 ```
-
-
 
 ```{r}
 library(fmsb) 
@@ -570,46 +565,53 @@ legend(
 
 Ou seja, podemos separar os respondentes dos questionários em 2 grupos:
 
-- Os que aumentaram o consumo de alimentos saudáveis (cluster 1):
-  
-  - Aumentou: Frutas, Legumes/Verduras
-  - Diminuiu/Não tenho o hábito: Bebidas Alcoolicas, Produtos Industrializados
+-   Os que aumentaram o consumo de alimentos saudáveis (cluster 1):
 
-  - Maior proporção na faixa de alta renda;
-  - Maior proporção de pós graduados;
-  - Menor proporção de não-trabalho;
-  - Menor proporção de dificuldade financeira;
-  - Idades mais dispersa (p25 = 22 e p75 = 42)
+    -   Aumentou: Frutas, Legumes/Verduras
 
-- Os que aumentaram o consumo de alimentos não-saudáveis (cluster 2):
-  
-  - Aumentou: Bebidas Alcoolicas, Produtos Industrializados, Doces
-  - Diminuiu: Frutas, Legumes/Verduras
+    -   Diminuiu/Não tenho o hábito: Bebidas Alcoolicas, Produtos Industrializados
 
-  - Menor proporção na faixa de alta renda;
-  - Maior proporção de fundamental e médio completo;
-  - Maior proporção de dificuldade financeira;
-  - Idades mais concentradas (p25 = 21 e p75 = 37)
+    -   Maior proporção na faixa de alta renda;
 
+    -   Maior proporção de pós graduados;
+
+    -   Menor proporção de não-trabalho;
+
+    -   Menor proporção de dificuldade financeira;
+
+    -   Idades mais dispersa (p25 = 22 e p75 = 42)
+
+-   Os que aumentaram o consumo de alimentos não-saudáveis (cluster 2):
+
+    -   Aumentou: Bebidas Alcoolicas, Produtos Industrializados, Doces
+
+    -   Diminuiu: Frutas, Legumes/Verduras
+
+    -   Menor proporção na faixa de alta renda;
+
+    -   Maior proporção de fundamental e médio completo;
+
+    -   Maior proporção de dificuldade financeira;
+
+    -   Idades mais concentradas (p25 = 21 e p75 = 37)
 
 # Principais Achados
 
 ### Quem mudou de hábito na pandemia?
 
-- 1735 das 2359 pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia;
-- As mulheres mudaram mais seus hábitos alimentares do que os homens;
-- Famílias com renda de até R$ 1254,00 apresentaram maior mudança de hábitos e famílias com renda maior do que R$8640,00 apresentaram uma maior proporção do preenchimento de ‘Não mudança de hábito’;
-- Altas escolaridades apresentaram maior proporção de não mudança de hábito e baixas escolaridades apresentaram maior proporção de mudança de hábito;
-- Quem não trabalha teve maior proporção de mudança de hábito;
-- A média de idade em quem mudou de hábito é menor e concentrada entre 22 - 39;
-- Quem passou por dificuldade financeira apresentou maior mudança de hábito. Quem não passou por dificuldade financeira não passou por mudança de hábito;
+-   1735 das 2359 pessoas que responderam ao questionário declararam que alteraram hábitos alimentares durante a pandemia;
+-   As mulheres mudaram mais seus hábitos alimentares do que os homens;
+-   Famílias com renda de até R\$ 1254,00 apresentaram maior mudança de hábitos e famílias com renda maior do que R\$8640,00 apresentaram uma maior proporção do preenchimento de ‘Não mudança de hábito’;
+-   Altas escolaridades apresentaram maior proporção de não mudança de hábito e baixas escolaridades apresentaram maior proporção de mudança de hábito;
+-   Quem não trabalha teve maior proporção de mudança de hábito;
+-   A média de idade em quem mudou de hábito é menor e concentrada entre 22 - 39;
+-   Quem passou por dificuldade financeira apresentou maior mudança de hábito. Quem não passou por dificuldade financeira não passou por mudança de hábito;
 
 Ou seja, podemos observar o seguinte recorte em quem reportou mudança de hábito: menor renda, menor escolaridade, não exercia atividade laboral e relatou dificuldade financeira.
 
-
 ### Principais características de quem mudou seus hábitos alimentares na pandemia
 
- Pessoas com renda familiar entre R$ 1.255 - R$ 8.640, ensino médio completo ou pós graduação, que trabalhavam e não passaram por dificuldade financeira durante a pandemia compoe o perfil de quem responder ter mudado os hábitos alimentares nesse período.
+Pessoas com renda familiar entre R\$ 1.255 - R\$ 8.640, ensino médio completo ou pós graduação, que trabalhavam e não passaram por dificuldade financeira durante a pandemia compoe o perfil de quem responder ter mudado os hábitos alimentares nesse período.
 
 ### Como se deu o consumo dos grupos alimentares
 
@@ -621,10 +623,9 @@ O consumo de bebidas alcoolicas, produtos industrializados e doces foi menor den
 
 O consumo de todos os alimentos selecionados apresentou maior proporção de diminuiu para quem passou por dificuldades financeiras se comparado ao Não.
 
-O consumo de todos os alimentos selecionados, exceto produtos industrializados, aumentou dentre as pessoas de maior renda familiar (mais de R$ 8640,00).
+O consumo de todos os alimentos selecionados, exceto produtos industrializados, aumentou dentre as pessoas de maior renda familiar (mais de R\$ 8640,00).
 
 Já a distribuição das idades foi bem similar para cada categoria de consumo alimentar listada.
-
 
 O complemento dessas análises foi feito via clusterização.
 
@@ -632,8 +633,8 @@ O complemento dessas análises foi feito via clusterização.
 
 Via clusterização foi possível identificar três grupos:
 
-- Mudanças para bons hábitos
-- Mudanças para maus hábitos
+-   Mudanças para bons hábitos
+-   Mudanças para maus hábitos
 
 **Mudanças para bons hábitos**
 
@@ -647,7 +648,6 @@ Aumentou o consumo de bebidas alcoolicas, produtos industrializados e doces. Enq
 
 Esse grupo é caracterizado por uma menor proporção de alta renda familiar, maior proporção de dificuldade financeira na pandemia e maior proporção de ensino fundamental e médio completo. Além disso, uma população mais nova, com percentil 75 em 37 anos.
 
-
 Pudemos observar que, pelos dados, foi possível identificar um grupo que mudou para bons hábitos e outro que mudou para maus hábitos. E essas diferenças podem estar relacionadas a um recorte social, uma vez que ficam claras as diferenças entre os dois grupos.
 
 No começo da análise pudemos ver que quem não relatou mudanda de hábito durante a pandemia tem um perfil demográfico similar ao de quem relatou mudança para bons hábitos.
@@ -658,7 +658,7 @@ No começo da análise pudemos ver que quem não relatou mudanda de hábito dura
 
 Aqui foi testada a criação de um escore para se verificar se poderia ser observada via odds-ratio a influencia das variáveis explicativas numa escala de melhora/piora alimentar.
 
-Para os alimentos saudáveis (Frutas, Legumes_Verduras), se aumentou o consumo soma 1 ponto e se diminuiu o consumo subtrai um ponto, e vice-versa para os alimentos não-saudáveis. 
+Para os alimentos saudáveis (Frutas, Legumes_Verduras), se aumentou o consumo soma 1 ponto e se diminuiu o consumo subtrai um ponto, e vice-versa para os alimentos não-saudáveis.
 
 Se a soma ficou menor do que zero, é classificado como piorou. Se maior do que zero, melhorou. E se igual a zero, manteve os hábitos.
 
@@ -707,7 +707,7 @@ kable(table(dados$Escore_Categoria),
       col.names = c(" ", "Total"))
 ```
 
-Na tabela abaixo podemos ver que todos os valores-p são altos e, consequentemente, os intervalos de confiança das odds-ratio contêm o 1. 
+Na tabela abaixo podemos ver que todos os valores-p são altos e, consequentemente, os intervalos de confiança das odds-ratio contêm o 1.
 
 ```{r}
 
@@ -764,14 +764,3 @@ kable(resultado_regressao$tabela_resultados,
 ```
 
 A criação desse escore não foi uma boa estratégia para diferenciar essas características.
-
-
-
-
-
-
-
-
-
-
-

@@ -35,7 +35,7 @@ library(gtsummary)
 library(patchwork)
 library(ggplotify)
 
-dados0 <- read_excel("C:\\Users\\Usuario\\Desktop\\DataProjects\\quarto_archives\\DadosNutri.xlsx")
+dados0 <- read_excel("\\quarto_archives\\DadosNutri.xlsx")
 
 theme_gtsummary_language("pt", big.mark = ".", decimal.mark = ",")
 jama_colors <- c('#374e55', '#df8f44', '#00a1d5', '#b24745')

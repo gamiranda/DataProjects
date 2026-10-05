@@ -1,0 +1,5 @@
+## Projetos
+
+- [Atividade 1 - ECD Introdução a Séries Temporais](quarto_archives/atividade1_basededados.qmd)
+
+- [Atividade 2 - ECD Introdução a Séries Temporais](quarto_archives/atividade2_regressaosuavizacao.qmd)

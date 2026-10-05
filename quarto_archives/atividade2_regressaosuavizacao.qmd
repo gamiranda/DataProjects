@@ -1,0 +1,289 @@
+---
+title: "Regressão e Suavização de Série Temporal: IPCA Mensal"
+author: "Gabriel Miranda"
+format:
+  pdf:
+    toc: false
+    number-sections: true
+    geometry:
+      - top=20mm
+      - bottom=20mm
+      - left=20mm
+      - right=20mm
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tsibble)
+library(ggplot2)
+library(feasts)
+library(GetBCBData)
+library(tseries)
+library(knitr)
+library(fable)
+
+beginDate = "1991-04-01"
+endDate = "1993-12-31"
+
+# Leitura e estruturação da série
+# df_ipca <- gbcbd_get_series(id = 433,
+#                            first.date = beginDate,
+#                            last.date = endDate) %>%
+#   rename(data = ref.date, ipca = value) %>%
+#   select(data, ipca) %>%
+#   mutate(mes = yearmonth(data)) %>%
+#   as_tsibble(index = mes)
+# 
+# save(df_ipca, file = "C:\\Users\\Usuario\\Desktop\\Especializacao\\Introducao a Series Temporais\\df_ipca.Rdata")
+
+load("\\quarto_archives\\df_ipca.Rdata")
+
+df_ipca_treino <- df_ipca %>%
+  filter(mes < yearmonth("1993-04"))
+
+df_ipca_teste <- df_ipca %>%
+  filter(mes >= yearmonth("1993-04"))
+
+```
+
+# Informações da Série Temporal
+
+- **Fonte dos dados:** Banco Central do Brasil / IBGE.
+- **Período analisado:** `r format(yearmonth(beginDate), "%m/%Y")` a `r format(yearmonth(endDate), "%m/%Y")`
+- **Frequência:** Mensal.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(df_ipca_treino, aes(x = mes, y = ipca)) +
+  geom_line(color = "#374e55", linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(
+    title = paste0("Variação Mensal do IPCA (%) - ", year(beginDate), " a ", year(endDate)),
+    x = "Ano",
+    y = "Variação Mensal (%)"
+  ) +
+  theme_minimal()
+```
+
+## Regressão linear
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+modelo_tslm <- df_ipca_treino %>%
+  model(
+    regressao = TSLM(ipca ~ trend())
+  )
+
+df_ipca_treino <- df_ipca_treino %>%
+  mutate(ipca_prev_tslm = augment(modelo_tslm)$.fitted)
+
+previsao <- modelo_tslm %>%
+  forecast(new_data = df_ipca_teste)
+
+df_ipca_teste = df_ipca_teste %>%
+    mutate(ipca_prev_tslm = previsao$.mean)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+report(modelo_tslm)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gg_tsresiduals(modelo_tslm)
+```
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+g1 = ggplot(df_ipca_treino, aes(x = mes)) +
+  geom_line(aes(y = ipca, color = "IPCA"), linewidth = 0.6) +
+  geom_line(aes(y = ipca_prev_tslm, color = "IPCA prev"), linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  scale_color_manual(values = c("IPCA" = "#374e55", "IPCA prev" = "#df8f44")) +
+  labs(
+    title = paste0("Variação Mensal do IPCA (%) - ", format(min(df_ipca_treino$data), "%m/%Y"), " a ", format(max(df_ipca_treino$data), "%m/%Y")),
+    x = "Ano",
+    y = "Variação Mensal (%)",
+    color = "Legenda"
+  ) +
+  theme_minimal()
+
+g1
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+g2 = ggplot(df_ipca_teste, aes(x = mes)) +
+  geom_line(aes(y = ipca, color = "IPCA"), linewidth = 0.6) +
+  geom_line(aes(y = ipca_prev_tslm, color = "IPCA prev"), linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  scale_color_manual(values = c("IPCA" = "#374e55", "IPCA prev" = "#df8f44")) +
+  labs(
+    title = paste0("Variação Mensal do IPCA (%) - ", format(min(df_ipca_teste$data), "%m/%Y"), " a ", format(max(df_ipca_teste$data), "%m/%Y")),
+    x = "Ano",
+    y = "Variação Mensal (%)",
+    color = "Legenda"
+  ) +
+  theme_minimal()
+
+g2
+```
+
+## Suavização Exponencial Holt
+
+Foi escolhida a Suavização Exponencial de Holt porque a série apresenta apenas tendência, e não sazonalidade.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+modelo_holt <- df_ipca_treino %>%
+  model(
+    holt = ETS(ipca ~ error("A") + trend("A") + season("N"))
+  )
+
+df_ipca_treino <- df_ipca_treino %>%
+  mutate(ipca_prev_holt = augment(modelo_holt)$.fitted)
+
+previsao <- modelo_holt %>%
+  forecast(new_data = df_ipca_teste)
+
+df_ipca_teste <- df_ipca_teste %>%
+  mutate(ipca_prev_holt = previsao$.mean)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+report(modelo_holt)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gg_tsresiduals(modelo_holt)
+```
+
+- Os erros oscilam entorno de zero
+    - A variação aparenta ser aleatória e sem padrões
+- Todas as barras verticais para os lags estão dentro do intervalo de confiança
+    - O pressuposto de independência dos resíduos é satisfeito
+- A distribuição dos erros está centrada próxima do zero
+    - O pressuposto de normalidade dos resíduos é atendido
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Gráfico - Ajuste no Treino
+g3 = ggplot(df_ipca_treino, aes(x = mes)) +
+  geom_line(aes(y = ipca, color = "IPCA"), linewidth = 0.6) +
+  geom_line(aes(y = ipca_prev_holt, color = "IPCA prev"), linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  scale_color_manual(values = c("IPCA" = "#374e55", "IPCA prev" = "#df8f44")) +
+  labs(
+    title = paste0("Variação Mensal do IPCA (%) - Treino (", format(min(df_ipca_treino$data), "%m/%Y"), " a ", format(max(df_ipca_treino$data), "%m/%Y"), ")"),
+    x = "Ano",
+    y = "Variação Mensal (%)",
+    color = "Legenda"
+  ) +
+  theme_minimal()
+
+g3
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Gráfico - Previsão no Teste
+g4 = ggplot(df_ipca_teste, aes(x = mes)) +
+  geom_line(aes(y = ipca, color = "IPCA"), linewidth = 0.6) +
+  geom_line(aes(y = ipca_prev_holt, color = "IPCA prev"), linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  scale_color_manual(values = c("IPCA" = "#374e55", "IPCA prev" = "#df8f44")) +
+  labs(
+    title = paste0("Variação Mensal do IPCA (%) - Teste (", format(min(df_ipca_teste$data), "%m/%Y"), " a ", format(max(df_ipca_teste$data), "%m/%Y"), ")"),
+    x = "Ano",
+    y = "Variação Mensal (%)",
+    color = "Legenda"
+  ) +
+  theme_minimal()
+
+g4
+```
+
+
+## Comparando métricas
+
+#### Métricas de validação - Treino
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+metricas_treino <- bind_rows(
+  modelo_tslm %>% accuracy(),
+  modelo_holt %>% accuracy()
+) %>%
+  select(.model, RMSE, MAE, MAPE) %>%
+  rename("Modelo" = ".model")
+
+previsoes_tslm <- modelo_tslm %>% forecast(new_data = df_ipca_teste)
+previsoes_holt <- modelo_holt %>% forecast(new_data = df_ipca_teste)
+
+previsoes_conjuntas_teste <- bind_rows(previsoes_tslm, previsoes_holt)
+
+metricas_teste <- previsoes_conjuntas_teste %>%
+  accuracy(df_ipca_teste) %>%
+  select(.model, RMSE, MAE, MAPE) %>%
+  rename("Modelo" = ".model")
+
+kable(
+  x = metricas_treino %>%
+    arrange(Modelo),
+  digits = 3,
+  caption = "Métricas de Desempenho no Conjunto de Treino"
+)
+
+```
+
+
+
+#### Métricas de validação - Teste
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kable(
+  x = metricas_teste %>%
+    arrange(Modelo),
+  digits = 3,
+  caption = "Métricas de Desempenho no Conjunto de Teste"
+)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot() +
+  geom_line(data = df_ipca_treino, aes(x = mes, y = ipca, color = "Observado (IPCA)"), linewidth = 0.8) +
+  geom_line(data = df_ipca_treino, aes(x = mes, y = ipca_prev_tslm, color = "Regressão TSLM"), linewidth = 1) +
+  geom_line(data = df_ipca_treino, aes(x = mes, y = ipca_prev_holt, color = "Holt (ETS)"), linewidth = 1) +
+  scale_color_manual(values = c("Observado (IPCA)" = "black", "Regressão TSLM" = "#e41a1c", "Holt (ETS)" = "#377eb8")) +
+  labs(
+    title = "Comparação de Previsões no Conjunto de Treino",
+    x = "Mês/Ano", y = "Variação Mensal (%)", color = "Série / Modelo"
+  ) +
+  theme_minimal()
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot() +
+  geom_line(data = df_ipca_teste, aes(x = mes, y = ipca, color = "Observado (IPCA)"), linewidth = 0.8) +
+  geom_line(data = df_ipca_teste, aes(x = mes, y = ipca_prev_tslm, color = "Regressão TSLM"), linewidth = 1) +
+  geom_line(data = df_ipca_teste, aes(x = mes, y = ipca_prev_holt, color = "Holt (ETS)"), linewidth = 1) +
+  scale_color_manual(values = c("Observado (IPCA)" = "black", "Regressão TSLM" = "#374e55", "Holt (ETS)" = "#df8f44")) +
+  labs(
+    title = "Comparação de Previsões no Conjunto de Teste",
+    x = "Mês/Ano", y = "Variação Mensal (%)", color = "Série / Modelo"
+  ) +
+  theme_minimal()
+```
+
+
+
+Na base de treino, o modelo de Holt obteve melhor desempenho e melhor ajuste, como pôde ser visto no gráfico e nas métricas. Por atualizar o nível e a tendência a cada observação, ele consegue se ajustar melhor às oscilações do IPCA.
+
+Na base de teste, o modelo de Regressão Linear apresentou um desempenho superior ao Holt, reduzindo o erro percentual médio absoluto (MAPE) de 8,13% para 4,30%.
+
+O modelo de Holt adapta-se melhor aos dados históricos de treino. Contudo, na hora de projetar passos à frente no conjunto de teste, ele projeta a inclinação local mais recente, o que pode acumular erro se a trajetória mudar.
+
+No entanto, para previsão na base de teste, o modelo de Regressão Linear foi mais acurado com base nas métricas de erro (RMSE, MAE e MAPE).

@@ -1,0 +1,130 @@
+---
+title: "Análise Exploratória de Série Temporal: IPCA Mensal"
+author: "Gabriel Miranda"
+date: today
+format:
+  pdf:
+    toc: false
+    number-sections: true
+    geometry:
+      - top=20mm
+      - bottom=20mm
+      - left=20mm
+      - right=20mm
+---
+
+```{r include=FALSE}
+# knitr::opts_chunk_set(echo = TRUE, warning = FALSE, message = FALSE, fig.width = 7, fig.height = 3.8)
+
+# Instale os pacotes caso não os tenha:
+
+# install.packages("GetBCBData")
+# install.packages("tidyverse")
+# install.packages("knitr")
+# install.packages("remotes")
+# install.packages("tsibble")
+# install.packages("tseries")
+# install.packages("ggplot2")
+# remotes::install_version("rlang", version = "1.1.7")
+```
+
+# Informações da Série Temporal
+
+- **Fonte dos dados:** Banco Central do Brasil / IBGE.
+- **Período analisado:** 01/1991 a 12/1999
+- **Frequência:** Mensal.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tsibble)
+library(ggplot2)
+library(feasts)
+library(GetBCBData)
+library(tseries)
+library(knitr)
+
+beginDate = "1991-04-01"
+endDate = "1999-12-31"
+
+# Leitura e estruturação da série
+df_ipca <- gbcbd_get_series(id = 433,
+                           first.date = beginDate,
+                           last.date = endDate) %>%
+  rename(data = ref.date, ipca = value) %>%
+  select(data, ipca) %>%
+  mutate(mes = yearmonth(data)) %>%
+  as_tsibble(index = mes)
+```
+
+# Gráfico da Série Temporal
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(df_ipca, aes(x = mes, y = ipca)) +
+  geom_line(color = "#1f77b4", linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(
+    title = paste0("Variação Mensal do IPCA (%) - ", year(beginDate), " a ", year(endDate)),
+    x = "Ano",
+    y = "Variação Mensal (%)"
+  ) +
+  theme_minimal()
+```
+
+Entre 1991 e 1994 o gráfico apresenta uma clara tendência de subida do índice IPCA. No entanto, a partir de junho de 1994 o gráfico apresenta uma queda brusca e se mantem estável o final da série. Essa queda coincide com o início do Plano Real.
+
+\newpage
+
+# Medidas Descritivas
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+medidas <- tibble(
+  Média = mean(df_ipca$ipca),
+  Mediana = median(df_ipca$ipca),
+  `Desvio Padrão` = sd(df_ipca$ipca),
+  Mínimo = min(df_ipca$ipca),
+  Máximo = max(df_ipca$ipca),
+  IQR = IQR(df_ipca$ipca)
+) %>% 
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column()
+
+kable(medidas, 
+      digits = 2, 
+      col.names = c("Medidas", ""),
+      caption = paste0("Estatísticas Descritivas da Série IPCA (%) - ", year(beginDate), " a ", year(endDate)))
+```
+
+A discrepância entre média e mediana, e o alto desvio padrão são ficam claros quando observamos o gráfico anterior. Até certo período tivemos valor de até 47.43% de IPCA, e a partir de certo momento há uma queda brusca no índice. O fato da série conter dois períodos distintos faz com que seja complicado trabalhar com certas estatísticas.
+
+# Ferramentas Gráficas Complementares
+
+## Autocorrelação
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Função de Autocorrelação (ACF)
+df_ipca %>%
+  feasts::ACF(ipca, lag_max = 50) %>%
+  autoplot() +
+  labs(title = "Função de Autocorrelação (ACF)") +
+  theme_minimal()
+```
+
+\newpage
+
+### Teste aumentado de Dickey-Fuller
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+df_ipca %>% pull(ipca) %>% adf.test()
+```
+
+O gráfico de autocorrelação mostra uma forte correlação das inflações ao longo dos meses, o que é esperado. A inflação do mês seguinte tende a ser uma variação x do mês anterior, _ceteris paribus_. Observamos a quebra desse padrão, justamente, quando há uma mudança no plano econômico, que derruba a inflação.
+
+Já com relação a Estacionaridade, a queda gradual e lenta observada no Gráfico de Autocorrelação indica que a média da série não é constante ao longo do tempo, comportamento que fica claro no gráfico da série. Isso indica Tendência, na verdade. Para reforçar essa interpretação temos o Teste Aumentado de Dickey-Fuller, que possui como hipótese nula, justamente, a estacionaridade da série temporal. Com o valor-p de 0.3735 não há evidências para rejeitar essa hipótese nula. Então, unindo a interpretação do gráfico da série, de autocorrelação e do Teste Aumentado de Dickey-Fuller, podemos dizer que não se trata de uma série estacionária.
+
+# Próximos passos
+
+Analisar períodos específicos da série:
+
+- Antes do Plano Real;
+- Após o Plano Real.

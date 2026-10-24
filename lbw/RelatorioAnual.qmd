@@ -1,0 +1,149 @@
+---
+title: "Relatório anual sobre os nascidos vivos no Brasil"
+author: "Gabriel Miranda"
+format: 
+  pdf
+editor: source
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{python}
+#import os
+#os.chdir("lbw")
+
+import functions as f
+
+import polars as pl
+import plotnine as pn
+
+
+jama_colors = ['#374e55', '#df8f44', '#00a1d5', '#b24745']
+
+df = f.download_sinasc_data(2024)
+df = (
+    df.pipe(f.remove_unused_features)
+      .pipe(f.create_features)
+      .pipe(f.optimize_dtypes)
+)
+```
+
+
+
+## Informações sobre as mães
+
+```{python}
+mother_features = ["IDADEMAE", "ESTCIVMAE", "RACACORMAE", "QTDGESTANT", "ESCMAEAGR1"]
+
+df_mother = df.select(mother_features)
+```
+
+### Idade das mães
+```{python}
+boxplot = (
+    pn.ggplot(df, pn.aes(y="IDADEMAE"))
+    + pn.geom_boxplot(fill = jama_colors[0])
+    + pn.coord_flip()
+    + pn.labs(title="Boxplot das idades das mães", y="Idade da Mãe")
+    + pn.theme_minimal()
+    + pn.theme(
+      legend_position="none",
+      axis_text_y=pn.element_blank(),
+      axis_ticks_major_y=pn.element_blank()
+    )
+)
+
+boxplot.show()
+```
+
+
+```{python}
+histograma = (
+    pn.ggplot(df, pn.aes(x="IDADEMAE"))
+    + pn.geom_histogram(bins=30, fill=jama_colors[0], color="white")
+    + pn.labs(title="Histograma de valores", x="Valor", y="Frequência")
+    + pn.theme_minimal()
+)
+
+histograma.show()
+```
+
+### Estado civil das mães
+
+```{python}
+mapa_estcivmae = {
+    1: "Solteira",
+    2: "Casada",
+    3: "Viúva",
+    4: "Separada judicialmente/divorciada",
+    5: "União estável",
+    9: "Ignorada",
+}
+
+f.plot_bars(df = df_mother, variavel = "ESTCIVMAE", mapa = mapa_estcivmae, titulo = "Estado civil da mãe", xlabel = "Estado civil")
+```
+
+### Raça/Cor da mãe
+
+```{python}
+mapa_racacor = {
+    1: "Branca",
+    2: "Preta",
+    3: "Amarela",
+    4: "Parda",
+    5: "Indígena",
+    9: "Ignorado"
+}
+
+f.plot_bars(df = df_mother, variavel = "RACACORMAE", mapa = mapa_estcivmae, titulo = "Raça/cor da mãe", xlabel = "Raça/cor")
+```
+
+
+### Escolaridade da mãe
+
+```{python}
+mapa_escmaeagr1 = {
+    0: "Sem escolaridade",
+    1: "Fundamental I incompleto",
+    2: "Fundamental I completo",
+    3: "Fundamental II incompleto",
+    4: "Fundamental II completo",
+    5: "Ensino médio incompleto",
+    6: "Ensino médio completo",
+    7: "Superior incompleto",
+    8: "Superior completo",
+    9: "Ignorado",
+    10: "Fundamental I incompleto ou inespecífico",
+    11: "Fundamental II incompleto ou inespecífico",
+    12: "Ensino médio incompleto ou inespecífico",
+}
+
+
+f.plot_bars(df = df_mother, variavel = "ESCMAEAGR1", mapa = mapa_escmaeagr1, titulo = "Escolaridade da mãe (agregada, 2010)", xlabel = "Escolaridade", tamanho_texto = 6)
+```
+
+
+### Quantidade de Gestações
+
+```{python}
+mapa_qtgest = {
+    0: "Primeira gestação",
+    1: "Uma gestação anterior",
+    2: "Duas gestações anteriores",
+    3: "Três ou mais gestações anteriores",
+    9: "Ignorado"
+}
+
+df_mother = df_mother.with_columns(
+    pl.when(pl.col("QTDGESTANT") > 20)
+    .then(9)
+    .when(pl.col("QTDGESTANT") >= 3)
+    .then(3)
+    .otherwise(pl.col("QTDGESTANT"))
+    .alias("QTDGESTANT")
+)
+
+f.plot_bars(df = df_mother, variavel = "QTDGESTANT", mapa = mapa_qtgest, titulo = "Quantidade de gestações anteriores", xlabel = "Qtd. gestações anteriores")
+```

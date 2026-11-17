@@ -4,9 +4,11 @@ author: "Gabriel Miranda"
 format: html
 ---
 
+revisar contagem de fila e incluir textos de conclusão
+
 ## Exemplo com 6 clientes
 
-| Cliente | Tipo  | Chegada | Tempo na fila | Fim do atendimento |
+| Cliente | Tipo  | Chegada | Tempo no supermercado (min.) | Fim do atendimento |
 |:---:    |:---:  |---:     |---:           |---:                |
 | 1       | Comum | 1.61    | 8.42          | 10.03              |
 | 2       | Comum | 13.47   | 2.66          | 16.13              |

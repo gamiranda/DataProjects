@@ -28,7 +28,7 @@ format: html
 ```{r message = FALSE, warning = FALSE}
 library(dplyr)
 library(knitr)
-#set.seed(2026)
+set.seed(2026)
 
 # ---------------------- Parametros do problema -----------------------
 lambda   <- 10      # chegadas por hora (Poisson)
@@ -40,16 +40,16 @@ n_rep    <- 15000    # numero de replicacoes da simulacao
 
 # ---------------------- Uma replicacao -------------------------------
 # n_comum: numero de caixas comuns; n_pref: numero de caixas preferenciais
-simula_uma <- function(n_comum, n_pref) {
+simulador <- function(n_comum, n_pref) {
 
-  # 1) Gera as chegadas e tempos de servico ja convertidos para minutos
+  # Gera as chegadas e tempos de servico
   n <- rpois(1, lambda * T_aberto)
   if (n == 0) return(NULL)
   chegada <- sort(runif(n, 0, T_aberto)) * 60                   # (em min)
   prio    <- runif(n) < p_prio
   servico <- rexp(n, rate = ifelse(prio, mu_prio, mu_norm)) * 60 # (em min)
 
-  # 2) Estado dos caixas (agora todos os instantes t, inicio, fim, livre estao em minutos)
+  # Estado dos caixas
   livre <- rep(0, n_comum + n_pref)
   tipo  <- c(rep("comum", n_comum), rep("pref", n_pref))
 
@@ -58,7 +58,7 @@ simula_uma <- function(n_comum, n_pref) {
   fim        <- numeric(n)
   caixa_tipo <- character(n)
 
-  # 3) Atende um cliente por iteracao (nenhuma mudanca necessaria aqui)
+  # Atende um cliente por iteracao 
   for (k in 1:n) {
     j <- which.min(livre)
     t <- livre[j]
@@ -126,21 +126,21 @@ simula_uma <- function(n_comum, n_pref) {
 
 # ---------------------- Replica e resume um cenario ------------------
 simula_cenario <- function(n_comum, n_pref) {
-  res <- do.call(rbind, lapply(1:n_rep, function(i) simula_uma(n_comum, n_pref)))
+  res <- do.call(rbind, lapply(1:n_rep, function(i) simulador(n_comum, n_pref)))
   res %>%
     summarise(
-      # a) tempo medio por tipo de cliente (media ponderada pelo no. de clientes)
+      # tempo medio por tipo de cliente (media ponderada pelo n de clientes)
       tempo_prioritario     = sum(soma_p) / sum(n_p),
       tempo_nao_prioritario = sum(soma_n) / sum(n_n),
-      # b) tempo medio de um cliente qualquer
+      # tempo medio de um cliente qualquer
       tempo_qualquer        = (sum(soma_p) + sum(soma_n)) / (sum(n_p) + sum(n_n)),
-      # c) tempo medio de funcionamento apos o expediente (min)
+      # tempo medio de funcionamento apos o expediente (min)
       extra_min             = mean(extra),
       extra_ep              = sd(extra) / sqrt(n()),
-      # d) no. medio de prioritarios atendidos em caixa comum
+      # n medio de prioritarios atendidos em caixa comum
       prio_no_comum         = mean(prio_comum),
       prio_no_comum_ep      = sd(prio_comum) / sqrt(n()),
-      # --- estatisticas de fila ---
+      # fila
       clientes_por_dia      = (sum(n_p) + sum(n_n)) / n(),
       filas_por_dia         = mean(n_filas),               # episodios de fila/dia
       dias_sem_fila         = mean(n_filas == 0),          # fracao de dias sem nenhuma fila
@@ -148,7 +148,7 @@ simula_cenario <- function(n_comum, n_pref) {
       pct_esperam           = 100 * sum(n_espera) / (sum(n_p) + sum(n_n)),
       pct_esperam_prio      = 100 * sum(esp_p) / sum(n_p),
       pct_esperam_nao_prio  = 100 * sum(esp_n) / sum(n_n),
-      espera_media_fila     = sum(soma_fila) / (sum(n_p) + sum(n_n))  # min, todos os clientes
+      espera_media_fila     = sum(soma_fila) / (sum(n_p) + sum(n_n))
     )
 }
 ```

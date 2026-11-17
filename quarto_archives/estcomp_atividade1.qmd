@@ -1,18 +1,19 @@
 ---
-title: "Untitled"
+title: "Tema 4 - Supermercado com preferência"
+author: "Gabriel Miranda"
 format: html
 ---
 
 ## Exemplo com 6 clientes
 
-| Cliente | Tipo  | Chegada    | Tempo na fila |  Fim |
-|:---:    |:---:  |---:        |---:           |---:  |
-| 1       | Comum | 0.02681693 | 0.1402826506  | 0.1670996 |
-| 2       | Comum | 0.22456818 | 0.0442879722  | 0.2688562 |
-| 3       | Comum | 0.24036858 | 0.0126514729  | 0.2530201 |
-| 4       | Comum | 0.36074793 | 0.0575713466  | 0.4183193 |
-| 5       | Prio. | 0.36936431 | 0.2683053564  | 0.6376697 |
-| 6       | Comum | 0.37322268 | 0.0591814631  | 0.4324041 |
+| Cliente | Tipo  | Chegada | Tempo na fila | Fim do atendimento |
+|:---:    |:---:  |---:     |---:           |---:                |
+| 1       | Comum | 1.61    | 8.42          | 10.03              |
+| 2       | Comum | 13.47   | 2.66          | 16.13              |
+| 3       | Comum | 14.42   | 0.76          | 15.18              |
+| 4       | Comum | 21.64   | 3.45          | 25.10              |
+| 5       | Prio. | 22.16   | 16.10         | 38.26              |
+| 6       | Comum | 22.39   | 3.55          | 25.94              |
 
 : Resultados da simulação da fila {#tbl-simulacao}
 
@@ -27,7 +28,7 @@ format: html
 ```{r message = FALSE, warning = FALSE}
 library(dplyr)
 library(knitr)
-set.seed(2026)
+#set.seed(2026)
 
 # ---------------------- Parametros do problema -----------------------
 lambda   <- 10      # chegadas por hora (Poisson)
@@ -41,38 +42,33 @@ n_rep    <- 15000    # numero de replicacoes da simulacao
 # n_comum: numero de caixas comuns; n_pref: numero de caixas preferenciais
 simula_uma <- function(n_comum, n_pref) {
 
-  # 1) Gera as chegadas: N ~ Poisson(lambda*T); dado N, os instantes sao
-  #    uniformes em [0, T] (propriedade do processo de Poisson)
+  # 1) Gera as chegadas e tempos de servico ja convertidos para minutos
   n <- rpois(1, lambda * T_aberto)
   if (n == 0) return(NULL)
-  chegada <- sort(runif(n, 0, T_aberto)) # horario das chegadas
-  prio    <- runif(n) < p_prio           # quem eh prio em cada chegada
-  servico <- rexp(n, rate = ifelse(prio, mu_prio, mu_norm))  # tempo de atendimento de cada cliente em horas
+  chegada <- sort(runif(n, 0, T_aberto)) * 60                   # <--- MUDOU (em min)
+  prio    <- runif(n) < p_prio
+  servico <- rexp(n, rate = ifelse(prio, mu_prio, mu_norm)) * 60 # <--- MUDOU (em min)
 
-  # 2) Estado dos caixas: instante em que cada um fica livre e seu tipo
-  livre <- rep(0, n_comum + n_pref) # quantos caixas livres
-  tipo  <- c(rep("comum", n_comum), rep("pref", n_pref)) # tipo dos caixas
+  # 2) Estado dos caixas (agora todos os instantes t, inicio, fim, livre estao em minutos)
+  livre <- rep(0, n_comum + n_pref)
+  tipo  <- c(rep("comum", n_comum), rep("pref", n_pref))
 
-  atendido  <- rep(FALSE, n)   # cliente ja foi atendido? (para cada um dos n clientes)
-  inicio    <- numeric(n)      # instante de inicio do atendimento
-  fim       <- numeric(n)      # instante de fim do atendimento
-  caixa_tipo <- character(n)   # tipo de caixa que atendeu o cliente
+  atendido   <- rep(FALSE, n)
+  inicio     <- numeric(n)
+  fim        <- numeric(n)
+  caixa_tipo <- character(n)
 
-  # 3) Atende um cliente por iteracao
+  # 3) Atende um cliente por iteracao (nenhuma mudanca necessaria aqui)
   for (k in 1:n) {
-    j <- which.min(livre)      # caixa livre
+    j <- which.min(livre)
     t <- livre[j]
 
-    # clientes esperando no instante t (na fila)
     fila <- which(!atendido & chegada <= t)
 
     if (length(fila) == 0) {
-      # Fila vazia: avanca o tempo ate a proxima chegada
       prox <- min(which(!atendido))
       t    <- chegada[prox]
       fila <- prox
-      # Entre os caixas livres nesse instante, o cliente prioritario vai
-      # preferencialmente ao caixa preferencial e o comum ao caixa comum
       disp <- which(livre <= t)
       pref_tipo <- if (prio[prox]) "pref" else "comum"
       cand <- disp[tipo[disp] == pref_tipo]
@@ -81,58 +77,49 @@ simula_uma <- function(n_comum, n_pref) {
 
     # 4) Escolha do cliente conforme o tipo do caixa
     if (tipo[j] == "pref") {
-      # caixa preferencial: prioritarios primeiro; se nao ha, atende o 1o da fila
       fp <- fila[prio[fila]]
       c_esc <- if (length(fp) > 0) fp[1] else fila[1]
     } else {
-      # caixa comum: proximo da fila, prioritario ou nao
       c_esc <- fila[1]
     }
 
     # 5) Registra o atendimento
     atendido[c_esc]   <- TRUE
-    inicio[c_esc]     <- max(t, chegada[c_esc]) # que horas iniciou o atendimento
-    fim[c_esc]        <- inicio[c_esc] + servico[c_esc] # que horas finalizou o atendimento
-    caixa_tipo[c_esc] <- tipo[j] # qual tipo de caixa foi usado
-    livre[j]          <- fim[c_esc] # que horas o caixa ficou desocupado
+    inicio[c_esc]     <- max(t, chegada[c_esc])
+    fim[c_esc]        <- inicio[c_esc] + servico[c_esc]
+    caixa_tipo[c_esc] <- tipo[j]
+    livre[j]          <- fim[c_esc]
   }
 
-  # 6) Metricas da replicacao (tempos em minutos)
-  tempo_sis <- (fim - chegada) * 60          # fila + atendimento
+  # 6) Metricas da replicacao (ja estao em minutos, sem multiplicar por 60)
+  tempo_sis <- fim - chegada                 # <--- MUDOU (removido * 60)
 
-  # 7) Formacao de filas: cliente "esperou" se comecou a ser atendido
-  #    depois de chegar (tolerancia numerica de 1e-12 h)
-  espera_min <- (inicio - chegada) * 60      # tempo so na fila (min)
+  # 7) Formacao de filas
+  espera_min <- inicio - chegada             # <--- MUDOU (removido * 60)
   esperou    <- espera_min > 1e-9
 
-  # Episodios de fila: intervalos [chegada, inicio] dos clientes que
-  # esperaram, fundidos quando se sobrepoem (uma fila continua = 1 episodio)
   w <- which(esperou)
   if (length(w) == 0) {
     n_filas <- 0
   } else {
     ini_w   <- inicio[w]
-    cheg_w  <- chegada[w]                    # ja ordenado (chegada eh crescente)
-    fim_ant <- c(-Inf, cummax(ini_w)[-length(ini_w)])  # maior fim de fila anterior
-    n_filas <- sum(cheg_w > fim_ant)         # novo episodio se chegou apos a fila anterior acabar
+    cheg_w  <- chegada[w]
+    fim_ant <- c(-Inf, cummax(ini_w)[-length(ini_w)])
+    n_filas <- sum(cheg_w > fim_ant)
   }
 
   data.frame(
-    n_p      = sum(prio),
-    n_n      = sum(!prio),
-    soma_p   = sum(tempo_sis[prio]),
-    soma_n   = sum(tempo_sis[!prio]),
-    # tempo apos as 6h ate o ultimo cliente sair (0 se acabou antes)
-    extra    = max(0, max(fim) - T_aberto) * 60,
-    # prioritarios atendidos em caixa comum
+    n_p        = sum(prio),
+    n_n        = sum(!prio),
+    soma_p     = sum(tempo_sis[prio]),
+    soma_n     = sum(tempo_sis[!prio]),
+    # tempo apos os 360 min ate o ultimo cliente sair (0 se acabou antes)
+    extra      = max(0, max(fim) - (T_aberto * 60)), # <--- MUDOU
     prio_comum = sum(prio & caixa_tipo == "comum"),
-    # clientes que precisaram esperar (total e por tipo)
     n_espera   = sum(esperou),
     esp_p      = sum(esperou & prio),
     esp_n      = sum(esperou & !prio),
-    # numero de filas (episodios) formadas no dia
     n_filas    = n_filas,
-    # tempo medio de espera apenas na fila (min), somado para ponderar depois
     soma_fila  = sum(espera_min)
   )
 }
@@ -169,7 +156,7 @@ simula_cenario <- function(n_comum, n_pref) {
 
 
 
-```{r}
+```{r message = FALSE, warning = FALSE}
 # ---------------------- Cenarios -------------------------------------
 cenA <- simula_cenario(n_comum = 2, n_pref = 2)   # 2 comuns + 2 preferenciais
 cenB <- simula_cenario(n_comum = 3, n_pref = 1)   # 3 comuns + 1 preferencial
@@ -180,28 +167,54 @@ resultado <- bind_rows(
 ) %>% select(cenario, everything())
 ```
 
-```{r}
+### Respondendo as perguntas
+
+a) O tempo ḿedio que cada tipo de cliente gasta no supermercado (fila+atendimento).
+
+b) O tempo médio que um cliente qualquer gasta no atendimento desse supermercadod.
+(fila+atendimento).
+
+c) O tempo ḿedio que o supermercado continua aberto aṕos o final do expediente para
+atender os demais clientes.
+
+d) O número médio de clientes prioritários atendidos no caixa comum
+
+```{r message = FALSE, warning = FALSE}
 kable(as.data.frame(resultado %>%
-                      select(cenario, tempo_prioritario, tempo_nao_prioritario, tempo_qualquer,
-                             extra_min, extra_ep, prio_no_comum, prio_no_comum_ep)), digits = 4)
+                      select(cenario, 
+                             tempo_prioritario, 
+                             tempo_nao_prioritario, 
+                             tempo_qualquer,
+                             extra_min, 
+                             prio_no_comum) %>%
+                      rename(
+                        "Cenário" = "cenario",
+                        "Temp. Prio." = "tempo_prioritario",
+                        "Temp. Comum" = "tempo_nao_prioritario",
+                        "Temp. Geral" = "tempo_qualquer",
+                        "Temp. Pós exp. (min)" = "extra_min",
+                        "Prio. no Comum" = "prio_no_comum"
+                      )), digits = 4)
 ```
 
-```{r}
-cat("\n=== Formacao de filas ao longo do dia ===\n")
+### Formação de filas ao longo do dia
+
+```{r message = FALSE, warning = FALSE}
 
 kable(as.data.frame(resultado %>%
-                      select(cenario, clientes_por_dia, filas_por_dia, dias_sem_fila,
-                             clientes_esperam_dia, pct_esperam, pct_esperam_prio,
-                             pct_esperam_nao_prio, espera_media_fila)), digits = 4)
+                      select(cenario, 
+                             filas_por_dia,
+                             dias_sem_fila,
+                             clientes_por_dia, 
+                             clientes_esperam_dia, 
+                             espera_media_fila) %>%
+                      rename(
+                        "Cenário" = "cenario",
+                        "Filas por dia" = "filas_por_dia",
+                        "Dias sem fila" = "dias_sem_fila",
+                        "Clientes por dia" = "clientes_por_dia",
+                        "Qtd. clientes em fila" = "clientes_esperam_dia",
+                        "Tempo médio em fila (min)" = "espera_media_fila"
+                      )), digits = 4)
 ```
 
-```{r}
-# ---------------------- Decisao --------------------------------------
-# Diferenca (B - A) em cada metrica: valores proximos de 0 indicam empate
-# tecnico (compare com os erros-padrao da simulacao, ~0,03 a 0,3).
-dif <- resultado[2, sapply(resultado, is.numeric)] -
-  resultado[1, sapply(resultado, is.numeric)]
-cat("\nDiferenca (3 comuns + 1 pref.) - (2 comuns + 2 pref.):\n")
-print(as.data.frame(dif), digits = 3)
-cat("\nCriterio: tempo medio de um cliente qualquer (b) e tempo extra (c).\n")
-```

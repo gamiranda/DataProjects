@@ -45,9 +45,9 @@ simula_uma <- function(n_comum, n_pref) {
   # 1) Gera as chegadas e tempos de servico ja convertidos para minutos
   n <- rpois(1, lambda * T_aberto)
   if (n == 0) return(NULL)
-  chegada <- sort(runif(n, 0, T_aberto)) * 60                   # <--- MUDOU (em min)
+  chegada <- sort(runif(n, 0, T_aberto)) * 60                   # (em min)
   prio    <- runif(n) < p_prio
-  servico <- rexp(n, rate = ifelse(prio, mu_prio, mu_norm)) * 60 # <--- MUDOU (em min)
+  servico <- rexp(n, rate = ifelse(prio, mu_prio, mu_norm)) * 60 # (em min)
 
   # 2) Estado dos caixas (agora todos os instantes t, inicio, fim, livre estao em minutos)
   livre <- rep(0, n_comum + n_pref)
@@ -91,11 +91,11 @@ simula_uma <- function(n_comum, n_pref) {
     livre[j]          <- fim[c_esc]
   }
 
-  # 6) Metricas da replicacao (ja estao em minutos, sem multiplicar por 60)
-  tempo_sis <- fim - chegada                 # <--- MUDOU (removido * 60)
+  # 6) Metricas da replicacao
+  tempo_sis <- fim - chegada                 
 
   # 7) Formacao de filas
-  espera_min <- inicio - chegada             # <--- MUDOU (removido * 60)
+  espera_min <- inicio - chegada             
   esperou    <- espera_min > 1e-9
 
   w <- which(esperou)
@@ -114,7 +114,7 @@ simula_uma <- function(n_comum, n_pref) {
     soma_p     = sum(tempo_sis[prio]),
     soma_n     = sum(tempo_sis[!prio]),
     # tempo apos os 360 min ate o ultimo cliente sair (0 se acabou antes)
-    extra      = max(0, max(fim) - (T_aberto * 60)), # <--- MUDOU
+    extra      = max(0, max(fim) - (T_aberto * 60)), 
     prio_comum = sum(prio & caixa_tipo == "comum"),
     n_espera   = sum(esperou),
     esp_p      = sum(esperou & prio),

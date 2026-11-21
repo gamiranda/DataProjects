@@ -4,45 +4,52 @@ author: "Gabriel Miranda"
 format: html
 ---
 
-revisar contagem de fila e incluir textos de conclusão
 
-## Exemplo com 6 clientes
+# Contextualização
 
-| Cliente | Tipo  | Chegada | Tempo no supermercado (min.) | Fim do atendimento |
-|:---:    |:---:  |---:     |---:           |---:                |
-| 1       | Comum | 1.61    | 8.42          | 10.03              |
-| 2       | Comum | 13.47   | 2.66          | 16.13              |
-| 3       | Comum | 14.42   | 0.76          | 15.18              |
-| 4       | Comum | 21.64   | 3.45          | 25.10              |
-| 5       | Prio. | 22.16   | 16.10         | 38.26              |
-| 6       | Comum | 22.39   | 3.55          | 25.94              |
+Esse supermercado funciona por um período de 6 horas. Terminado o horário de
+atendimento, todos os clientes que já estavam na fila são atendidos mas nenhum outro
+cliente  é permitido de entrar no supermercado. O dono do supermercado gostaria de
+minimizar o tempo que os clientes passam na fila e o tempo que seus caixas precisam
+permanecer após o horário para atender os clientes que faltam.
+
+**A QUESTAO:** Esse supermercado possui 4 caixas e quer decidir se coloca 2 caixas
+comuns e 2 preferenciais, ou 3 caixas comuns e 1 caixa preferencial. Para definir a melhor
+escolha cabe a você estimar, para cada um desses casos.
+
+
+
+### Exemplo com 6 clientes:
+
+| Cliente | Tipo  | Chegada | Tempo no supermercado (min.) | Fim do atendimento | Caixa   |
+|:---:    |:---:  |---:     |---:                          |---:                |:---:    |
+| 1       | Comum | 1.61    | 8.42                         | 10.03              | 1       |
+| 2       | Comum | 13.47   | 2.66                         | 16.13              | 1       |
+| 3       | Comum | 14.42   | 0.76                         | 15.18              | 2       |
+| 4       | Comum | 21.64   | 3.45                         | 25.10              | 1       |
+| 5       | Prio. | 22.16   | 16.10                        | 38.26              | 3       |
+| 6       | Comum | 22.39   | 3.55                         | 25.94              | 2       |
 
 : Resultados da simulação da fila {#tbl-simulacao}
 
-- Cliente 1: comum e atendido no caixa 1;
-- Cliente 2: comum e atendido no caixa 1;
-- Cliente 3: comum e atendido no caixa 2;
-- Cliente 4: comum e atendido no caixa 1;
-- Cliente 5: prio. e  atendido no caixa 3;
-- Cliente 6: comum e atendido no caixa 2.
 
 
 ```{r message = FALSE, warning = FALSE}
 library(dplyr)
 library(knitr)
-set.seed(2026)
 
-# ---------------------- Parametros do problema -----------------------
-lambda   <- 10      # chegadas por hora (Poisson)
-p_prio   <- 0.20    # probabilidade de cliente prioritario
-mu_norm  <- 6       # taxa de atendimento nao prioritario (media 10 min)
-mu_prio  <- 3       # taxa de atendimento prioritario (media 20 min)
-T_aberto <- 6       # horas de funcionamento
-n_rep    <- 15000    # numero de replicacoes da simulacao
+# Parametros
+# n_comum  = 2
+# n_prio   = 2
+# lambda   = 10      # chegadas por hora (Poisson)
+# p_prio   = 0.20    # probabilidade de cliente prioritario
+# mu_norm  = 6       # taxa de atendimento nao prioritario (media 10 min)
+# mu_prio  = 3       # taxa de atendimento prioritario (media 20 min)
+# T_aberto = 6       # horas de funcionamento
+# n_rep    = 15000    # numero de replicacoes da simulacao
 
-# ---------------------- Uma replicacao -------------------------------
-# n_comum: numero de caixas comuns; n_pref: numero de caixas preferenciais
-simulador <- function(n_comum, n_pref) {
+
+simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_aberto, n_rep) {
 
   # Gera as chegadas e tempos de servico
   n <- rpois(1, lambda * T_aberto)
@@ -52,8 +59,8 @@ simulador <- function(n_comum, n_pref) {
   servico <- rexp(n, rate = ifelse(prio, mu_prio, mu_norm)) * 60 # (em min)
 
   # Estado dos caixas
-  livre <- rep(0, n_comum + n_pref)
-  tipo  <- c(rep("comum", n_comum), rep("pref", n_pref))
+  livre <- rep(0, n_comum + n_prio)
+  tipo  <- c(rep("comum", n_comum), rep("pref", n_prio))
 
   atendido   <- rep(FALSE, n)
   inicio     <- numeric(n)
@@ -77,7 +84,6 @@ simulador <- function(n_comum, n_pref) {
       j <- if (length(cand) > 0) cand[1] else disp[1]
     }
 
-    # 4) Escolha do cliente conforme o tipo do caixa
     if (tipo[j] == "pref") {
       fp <- fila[prio[fila]]
       c_esc <- if (length(fp) > 0) fp[1] else fila[1]
@@ -85,7 +91,6 @@ simulador <- function(n_comum, n_pref) {
       c_esc <- fila[1]
     }
 
-    # 5) Registra o atendimento
     atendido[c_esc]   <- TRUE
     inicio[c_esc]     <- max(t, chegada[c_esc])
     fim[c_esc]        <- inicio[c_esc] + servico[c_esc]
@@ -93,22 +98,7 @@ simulador <- function(n_comum, n_pref) {
     livre[j]          <- fim[c_esc]
   }
 
-  # 6) Metricas da replicacao
   tempo_sis <- fim - chegada                 
-
-  # 7) Formacao de filas
-  espera_min <- inicio - chegada             
-  esperou    <- espera_min > 1e-9
-
-  w <- which(esperou)
-  if (length(w) == 0) {
-    n_filas <- 0
-  } else {
-    ini_w   <- inicio[w]
-    cheg_w  <- chegada[w]
-    fim_ant <- c(-Inf, cummax(ini_w)[-length(ini_w)])
-    n_filas <- sum(cheg_w > fim_ant)
-  }
 
   data.frame(
     n_p        = sum(prio),
@@ -118,17 +108,14 @@ simulador <- function(n_comum, n_pref) {
     # tempo apos os 360 min ate o ultimo cliente sair (0 se acabou antes)
     extra      = max(0, max(fim) - (T_aberto * 60)), 
     prio_comum = sum(prio & caixa_tipo == "comum"),
-    n_espera   = sum(esperou),
-    esp_p      = sum(esperou & prio),
-    esp_n      = sum(esperou & !prio),
-    n_filas    = n_filas,
-    soma_fila  = sum(espera_min)
+    comum_prio = sum(!prio & caixa_tipo == "pref")
   )
 }
 
 # ---------------------- Replica e resume um cenario ------------------
-simula_cenario <- function(n_comum, n_pref) {
-  res <- do.call(rbind, lapply(1:n_rep, function(i) simulador(n_comum, n_pref)))
+simula_cenario <- function(n_comum, n_prio, lambda = 10, p_prio = 0.2, mu_norm = 6, mu_prio = 3, T_aberto = 6, n_rep = 15000) {
+  
+  res <- do.call(rbind, lapply(1:n_rep, function(i) simulador(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_aberto, n_rep)))
   res %>%
     summarise(
       # tempo medio por tipo de cliente (media ponderada pelo n de clientes)
@@ -142,44 +129,39 @@ simula_cenario <- function(n_comum, n_pref) {
       # n medio de prioritarios atendidos em caixa comum
       prio_no_comum         = mean(prio_comum),
       prio_no_comum_ep      = sd(prio_comum) / sqrt(n()),
-      # fila
-      clientes_por_dia      = (sum(n_p) + sum(n_n)) / n(),
-      filas_por_dia         = mean(n_filas),               # episodios de fila/dia
-      dias_sem_fila         = mean(n_filas == 0),          # fracao de dias sem nenhuma fila
-      clientes_esperam_dia  = mean(n_espera),              # clientes que esperam/dia
-      pct_esperam           = 100 * sum(n_espera) / (sum(n_p) + sum(n_n)),
-      pct_esperam_prio      = 100 * sum(esp_p) / sum(n_p),
-      pct_esperam_nao_prio  = 100 * sum(esp_n) / sum(n_n),
-      espera_media_fila     = sum(soma_fila) / (sum(n_p) + sum(n_n))
+      comum_no_prio = mean(comum_prio),
     )
 }
 ```
 
 
-
-
-```{r message = FALSE, warning = FALSE}
-# ---------------------- Cenarios -------------------------------------
-cenA <- simula_cenario(n_comum = 2, n_pref = 2)   # 2 comuns + 2 preferenciais
-cenB <- simula_cenario(n_comum = 3, n_pref = 1)   # 3 comuns + 1 preferencial
-
-resultado <- bind_rows(
-  cenA %>% mutate(cenario = "2 comuns + 2 pref."),
-  cenB %>% mutate(cenario = "3 comuns + 1 pref.")
-) %>% select(cenario, everything())
-```
-
 ### Respondendo as perguntas
 
-a) O tempo ḿedio que cada tipo de cliente gasta no supermercado (fila+atendimento).
+- Número de clientes: 10 por hora;
+- Caixa comum: 10 minutos;
+- Caixa prioritário: 20 minutos.
 
-b) O tempo médio que um cliente qualquer gasta no atendimento desse supermercadod.
-(fila+atendimento).
+a) O tempo ḿedio que cada tipo de cliente gasta no supermercado (fila+atendimento);
+
+b) O tempo médio que um cliente qualquer gasta no atendimento desse supermercado
+(fila+atendimento);
 
 c) O tempo ḿedio que o supermercado continua aberto aṕos o final do expediente para
-atender os demais clientes.
+atender os demais clientes;
 
-d) O número médio de clientes prioritários atendidos no caixa comum
+d) O número médio de clientes prioritários atendidos no caixa comum.
+
+```{r message = FALSE, warning = FALSE}
+# Cenarios 1
+set.seed(2026)
+cenA <- simula_cenario(n_comum = 2, n_prio = 2)   # 2 comuns + 2 preferenciais
+cenB <- simula_cenario(n_comum = 3, n_prio = 1)   # 3 comuns + 1 preferencial
+
+resultado <- bind_rows(
+  cenA %>% mutate(cenario = "2 comuns + 2 prio."),
+  cenB %>% mutate(cenario = "3 comuns + 1 prio.")
+) %>% select(cenario, everything())
+```
 
 ```{r message = FALSE, warning = FALSE}
 kable(as.data.frame(resultado %>%
@@ -199,24 +181,57 @@ kable(as.data.frame(resultado %>%
                       )), digits = 4)
 ```
 
-### Formação de filas ao longo do dia
+
+### Diminuindo os tempos de atendimento e aumentando o número de clientes
+
+Diminuindo o tempo de atendimento:
+
+- Número de clientes: 20 por hora;
+- Caixa comum: 20 minutos;
+- Caixa prioritário: 40 minutos.
 
 ```{r message = FALSE, warning = FALSE}
+# Cenarios 1
+set.seed(2026)
+cenA <- simula_cenario(n_comum = 2, n_prio = 2, lambda = 20, mu_norm = 3, mu_prio = 1.5)   
+cenB <- simula_cenario(n_comum = 3, n_prio = 1, lambda = 20, mu_norm = 3, mu_prio = 1.5)   
 
+resultado <- bind_rows(
+  cenA %>% mutate(cenario = "2 comuns + 2 prio."),
+  cenB %>% mutate(cenario = "3 comuns + 1 prio.")
+) %>% select(cenario, everything())
+```
+
+```{r message = FALSE, warning = FALSE}
 kable(as.data.frame(resultado %>%
                       select(cenario, 
-                             filas_por_dia,
-                             dias_sem_fila,
-                             clientes_por_dia, 
-                             clientes_esperam_dia, 
-                             espera_media_fila) %>%
+                             tempo_prioritario, 
+                             tempo_nao_prioritario, 
+                             tempo_qualquer,
+                             extra_min, 
+                             prio_no_comum) %>%
                       rename(
                         "Cenário" = "cenario",
-                        "Filas por dia" = "filas_por_dia",
-                        "Dias sem fila" = "dias_sem_fila",
-                        "Clientes por dia" = "clientes_por_dia",
-                        "Qtd. clientes em fila" = "clientes_esperam_dia",
-                        "Tempo médio em fila (min)" = "espera_media_fila"
+                        "Temp. Prio." = "tempo_prioritario",
+                        "Temp. Comum" = "tempo_nao_prioritario",
+                        "Temp. Geral" = "tempo_qualquer",
+                        "Temp. Pós exp. (min)" = "extra_min",
+                        "Prio. no Comum" = "prio_no_comum"
                       )), digits = 4)
 ```
+
+
+# Conclusão
+
+Considerando os parâmetros propostos:
+
+Todos os tempos de atendimento (prioritário, comum e geral) são menores na combinação 2 caixas comuns + 2 caixas prioritários. No entanto, são diferenças muito pequenas. O único indicador com diferença relevante é o número de clientes prioritários no caixa comum, onde com 3 caixas comuns + 1 caixas prioritários esse número aumenta.
+
+Então, a abordagem preferível é a de 2 caixas comuns + 2 caixas prioritários, uma vez que os tempos de atendimento são menores (mesmo que com pouca diferença) e os clientes prioritários terão mais caixas exclusivos.
+
+
+
+
+
+
 

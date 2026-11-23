@@ -49,7 +49,7 @@ library(knitr)
 # n_rep    = 15000    # numero de replicacoes da simulacao
 
 
-simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_aberto, n_rep) {
+simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_aberto) {
 
   # Gera as chegadas e tempos de servico
   n <- rpois(1, lambda * T_aberto)
@@ -58,10 +58,11 @@ simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_abert
   prio    <- runif(n) < p_prio
   servico <- rexp(n, rate = ifelse(prio, mu_prio, mu_norm)) * 60 # (em min)
 
-  # Estado dos caixas
+  # iniciando os caixas
   livre <- rep(0, n_comum + n_prio)
   tipo  <- c(rep("comum", n_comum), rep("pref", n_prio))
-
+  
+  # Iniciando vetores
   atendido   <- rep(FALSE, n)
   inicio     <- numeric(n)
   fim        <- numeric(n)
@@ -69,11 +70,16 @@ simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_abert
 
   # Atende um cliente por iteracao 
   for (k in 1:n) {
+    # Pega a posição dos caixas
+    # j recebe o proximo caixa a ficar livre
     j <- which.min(livre)
+    # tempo que o caixa vai ficar livre
     t <- livre[j]
-
+    
+    # verifica se tem fila
     fila <- which(!atendido & chegada <= t)
-
+    
+    # Se não tem fila:
     if (length(fila) == 0) {
       prox <- min(which(!atendido))
       t    <- chegada[prox]
@@ -83,21 +89,30 @@ simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_abert
       cand <- disp[tipo[disp] == pref_tipo]
       j <- if (length(cand) > 0) cand[1] else disp[1]
     }
-
+    
+    # verifica se o proximo caixa é prioritario
     if (tipo[j] == "pref") {
+      
       fp <- fila[prio[fila]]
+      # se não tiver cliente preferencial na fila, pega o cliente comum
       c_esc <- if (length(fp) > 0) fp[1] else fila[1]
     } else {
       c_esc <- fila[1]
     }
 
     atendido[c_esc]   <- TRUE
+    # cliente foi atendido ou horario que o caixa foi liberado (t) 
+    # ou no horario que chegou (chegada[c_esc])
     inicio[c_esc]     <- max(t, chegada[c_esc])
+    # que minuto aquele cliente terminou de ser atendido
     fim[c_esc]        <- inicio[c_esc] + servico[c_esc]
+    # tipo de caixa que o cliente foi atendido
     caixa_tipo[c_esc] <- tipo[j]
+    # em que minuto o caixa ficou livre
     livre[j]          <- fim[c_esc]
   }
-
+  
+  # quanto tempo entre o cliente chegar e sair do supermercado
   tempo_sis <- fim - chegada                 
 
   data.frame(
@@ -112,10 +127,27 @@ simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_abert
   )
 }
 
-# ---------------------- Replica e resume um cenario ------------------
-simula_cenario <- function(n_comum, n_prio, lambda = 10, p_prio = 0.2, mu_norm = 6, mu_prio = 3, T_aberto = 6, n_rep = 15000) {
+# replica o cenario
+simula_cenario <- function(n_comum, 
+                           n_prio, 
+                           lambda = 10, 
+                           p_prio = 0.2, 
+                           mu_norm = 6, 
+                           mu_prio = 3, 
+                           T_aberto = 6, 
+                           n_rep = 15000) {
   
-  res <- do.call(rbind, lapply(1:n_rep, function(i) simulador(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_aberto, n_rep)))
+  # tipo um for, mas mais eficiente
+  res <- do.call(rbind, 
+                 lapply(1:n_rep, 
+                        function(i) simulador(n_comum, 
+                                              n_prio, 
+                                              lambda, 
+                                              p_prio, 
+                                              mu_norm, 
+                                              mu_prio, 
+                                              T_aberto)))
+  
   res %>%
     summarise(
       # tempo medio por tipo de cliente (media ponderada pelo n de clientes)

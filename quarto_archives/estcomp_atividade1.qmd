@@ -15,7 +15,17 @@ permanecer após o horário para atender os clientes que faltam.
 
 **A QUESTAO:** Esse supermercado possui 4 caixas e quer decidir se coloca 2 caixas
 comuns e 2 preferenciais, ou 3 caixas comuns e 1 caixa preferencial. Para definir a melhor
-escolha cabe a você estimar, para cada um desses casos.
+escolha cabe a você estimar, para cada um desses casos. Responda as seguintes perguntas:
+
+a) O tempo ḿedio que cada tipo de cliente gasta no supermercado (fila+atendimento);
+
+b) O tempo médio que um cliente qualquer gasta no atendimento desse supermercado
+(fila+atendimento);
+
+c) O tempo ḿedio que o supermercado continua aberto aṕos o final do expediente para
+atender os demais clientes;
+
+d) O número médio de clientes prioritários atendidos no caixa comum.
 
 
 
@@ -39,14 +49,14 @@ library(dplyr)
 library(knitr)
 
 # Parametros
-# n_comum  = 2
-# n_prio   = 2
-# lambda   = 10      # chegadas por hora (Poisson)
-# p_prio   = 0.20    # probabilidade de cliente prioritario
-# mu_norm  = 6       # taxa de atendimento nao prioritario (media 10 min)
-# mu_prio  = 3       # taxa de atendimento prioritario (media 20 min)
-# T_aberto = 6       # horas de funcionamento
-# n_rep    = 15000    # numero de replicacoes da simulacao
+n_comum  = 2
+n_prio   = 2
+lambda   = 10      # chegadas por hora (Poisson)
+p_prio   = 0.20    # probabilidade de cliente prioritario
+mu_norm  = 1.5       # taxa de atendimento nao prioritario (media 10 min)
+mu_prio  = 3       # taxa de atendimento prioritario (media 20 min)
+T_aberto = 6       # horas de funcionamento
+n_rep    = 15000    # numero de replicacoes da simulacao
 
 
 simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_aberto) {
@@ -81,12 +91,20 @@ simulador <- function(n_comum, n_prio, lambda, p_prio, mu_norm, mu_prio, T_abert
     
     # Se não tem fila:
     if (length(fila) == 0) {
+      # proximo cliente a chegar 
       prox <- min(which(!atendido))
+      # define o tempo para a chegada desse cliente
       t    <- chegada[prox]
+      # a fila passa a ser só esse cliente
       fila <- prox
+      # caixas que já estão disponiveis nesse instante
       disp <- which(livre <= t)
+      # tipo de caixa: preferencial para prioritário, comum para os comuns
       pref_tipo <- if (prio[prox]) "pref" else "comum"
+      # caixas livres do tipo do cliente
       cand <- disp[tipo[disp] == pref_tipo]
+      # usa o primeiro caixa do tipo do cliente; 
+      # se não houver, o primeiro caixa livre de qualquer tipo
       j <- if (length(cand) > 0) cand[1] else disp[1]
     }
     

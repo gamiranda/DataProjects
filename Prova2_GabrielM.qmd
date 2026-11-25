@@ -1,0 +1,434 @@
+---
+title: "Modelo de previsão para Baixo Peso ao Nascer"
+subtitle: "Aprendizado Supervisionado I"
+author: "Gabriel Miranda"
+format:
+  pdf:
+    toc: false
+    number-sections: true
+    geometry:
+      - top=20mm
+      - bottom=20mm
+      - left=20mm
+      - right=20mm
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+
+```{r}
+#| label: pacotes-funcoes
+
+library(readr)
+library(dplyr)
+library(tidyverse)
+library(knitr)
+library(tidymodels)
+library(butcher)
+
+
+# install.packages("ranger")
+# install.packages("xgboost")
+# install.packages("butcher")
+
+tratamento_dados = function(dt){
+
+    dt = dt |>
+        filter(!is.na(PESO)) |>
+        select(
+            "PESO","CODMUNRES",
+            "ESTCIVMAE","ESCMAE","RACACORMAE","QTDFILVIVO",
+            "QTDFILMORT" ,"QTDGESTANT" ,"QTDPARTNOR","QTDPARTCES" ,
+            "GRAVIDEZ", "QTDFILVIVO" ,"QTDFILMORT" ,"QTDGESTANT" ,
+            "QTDPARTNOR","QTDPARTCES","IDADEPAI","IDADEMAE") |>
+        mutate(
+          BAIXO_PESO = if_else(PESO < 2500, 1, 0),
+          REGIAO = case_when(
+            substr(CODMUNRES, 1, 2) %in% c(11, 12, 13, 14, 15, 16, 17) ~ "Norte",
+            substr(CODMUNRES, 1, 2) %in% c(21, 22, 23, 24, 25, 26, 27, 28, 29) ~ "Nordeste",
+            substr(CODMUNRES, 1, 2) %in% c(31, 32, 33, 35) ~ "Sudeste",
+            substr(CODMUNRES, 1, 2) %in% c(41, 42, 43) ~ "Sul",
+            substr(CODMUNRES, 1, 2) %in% c(50, 51, 52, 53) ~ "CentroOeste",
+          ),
+          IDADEPAI_PREENCHIDA = if_else(is.na(IDADEPAI), 0, 1)
+        ) |>
+        select(-PESO, -CODMUNRES, -IDADEPAI) |>
+        mutate_at(
+          c("ESTCIVMAE","ESCMAE","RACACORMAE",
+          "GRAVIDEZ","REGIAO","IDADEPAI_PREENCHIDA",
+          "BAIXO_PESO"),
+          as.factor
+        ) |>
+        mutate_at(
+          c("QTDFILVIVO","QTDFILMORT","QTDGESTANT",
+          "QTDPARTNOR","QTDPARTCES","QTDFILVIVO",
+          "QTDFILMORT" ,"QTDGESTANT","QTDPARTNOR",
+          "QTDPARTCES","IDADEMAE"),
+          as.numeric
+        ) |>
+        mutate(BAIXO_PESO = factor(BAIXO_PESO, levels = c("0", "1")))
+                
+
+    return(dt)
+}
+
+ponto_otimo_auc <- function(curva){
+  otimo <- curva |>
+    mutate(dist = sqrt((1 - sensitivity)^2 + (1 - specificity)^2)) |>
+    slice_min(dist, n = 1, with_ties = FALSE) |>
+    select(.threshold) |>
+    pull()
+
+  return(otimo)
+}
+
+calculando_metricas <- function(dt){
+
+  # métricas sobre a probabilidade
+  metricas_prob = metric_set(roc_auc, pr_auc, brier_class)
+
+  m_prob_rl  = dt |> 
+    metricas_prob(truth = BAIXO_PESO, BAIXO_PESO_PRED_rl, event_level = "second") |>
+    mutate(Modelo = "Regressão Logística")
+  m_prob_rf  = dt |> 
+    metricas_prob(truth = BAIXO_PESO, BAIXO_PESO_PRED_rf, event_level = "second") |>
+    mutate(Modelo = "Random Forest")
+  m_prob_xgb = dt |> 
+    metricas_prob(truth = BAIXO_PESO, BAIXO_PESO_PRED_xgb, event_level = "second") |>
+    mutate(Modelo = "XGB")
+
+  # métricas sobre a classe
+  metricas_class = metric_set(accuracy, specificity, recall, precision, detection_prevalence)
+
+  m_class_rl = dt |> 
+    metricas_class(truth = BAIXO_PESO, 
+                   estimate = BAIXO_PESO_PRED_rl_class, 
+                   event_level = "second") |>
+    mutate(Modelo = "Regressão Logística")
+  m_class_rf = dt |> 
+    metricas_class(truth = BAIXO_PESO, 
+                   estimate = BAIXO_PESO_PRED_rf_class, 
+                   event_level = "second") |>
+    mutate(Modelo = "Random Forest")
+  m_class_xgb = dt |> 
+    metricas_class(truth = BAIXO_PESO, 
+                   estimate = BAIXO_PESO_PRED_xgb_class, 
+                   event_level = "second") |>
+    mutate(Modelo = "XGB")
+
+
+  tabela = bind_rows(m_prob_rl, m_prob_rf, m_prob_xgb,
+                     m_class_rl, m_class_rf, m_class_xgb) |>
+           select(-`.estimator`) |>
+           pivot_wider(names_from = .metric, values_from = .estimate) |>
+           rename(
+            "AUCROC" = "roc_auc",
+            "AUCPR" = "pr_auc",
+            "Brier Score" = "brier_class",
+            "Acurácia" = "accuracy",
+            "Especificidade" = "specificity",
+            "Recall" = "recall",
+            "Precisão" = "precision",
+            "Prevalencia de detecção" = "detection_prevalence"
+           ) |>
+           arrange(desc(AUCROC)) |>
+           select(Modelo, AUCROC, AUCPR, `Brier Score`,
+                  Acurácia, Especificidade, Recall, `Precisão`, 
+                  `Prevalencia de detecção`) |>
+           pivot_longer(-Modelo, names_to = "Métrica", values_to = "valor") |>
+           pivot_wider(names_from = Modelo, values_from = valor)
+ 
+  return(tabela)
+}
+
+```
+
+
+```{r}
+#| label: bases-tratamentos
+
+# Fonte dos dados: https://dadosabertos.saude.gov.br/dataset/sistema-de-informacao-sobre-nascidos-vivos-sinasc
+
+treino = read_csv2("C:\\Users\\Usuario\\Desktop\\Especializacao\\Aprendizado Supervisionado I\\SINASC_2024.csv")
+#writexl::write_xlsx(treino |> head(1000), path = "Amostra_SINASC2024.xlsx")
+
+teste =  read_csv2("C:\\Users\\Usuario\\Desktop\\Especializacao\\Aprendizado Supervisionado I\\SINASC_2025.csv")
+
+treino = tratamento_dados(treino)
+teste = tratamento_dados(teste)
+
+glimpse(treino)
+```
+
+
+
+```{r}
+#| label: split-recipe
+
+set.seed(29)
+
+# Split treino-validacao
+split = initial_split(treino, prop = 0.8, strata = BAIXO_PESO)
+train = training(split)
+validation  = testing(split)
+
+rm(split)
+
+# Criando as receitas de tratamento da base
+rec = recipe(BAIXO_PESO ~ ., data = train) |>
+  step_impute_mode(all_nominal_predictors()) |>
+  step_impute_median(all_numeric_predictors()) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_normalize(all_numeric_predictors())
+
+
+# Para ver como ficou a base de treino:
+# rec_prep <- prep(rec, training = train)
+# train_baked <- bake(rec_prep)
+
+```
+
+
+```{r}
+#| label: def-modelos
+
+# Definindo os modelos
+rl_spec = logistic_reg() |>
+  set_engine("glm") |>
+  set_mode("classification")
+
+rf_spec = rand_forest(trees = 300, min_n = 50) |>
+  set_engine("ranger") |>
+  set_mode("classification")
+
+xgb_spec = boost_tree(trees = 500, tree_depth = 6, learn_rate = 0.05,
+                       min_n = 50, sample_size = 0.8) |>
+  set_engine("xgboost") |>
+  set_mode("classification")
+```
+
+```{r}
+#| label: worflows
+
+# Definindo os pipelines (junta tratamentos e o modelo)
+wf_rl = workflow(rec, rl_spec)
+wf_rf  = workflow(rec, rf_spec)
+wf_xgb = workflow(rec, xgb_spec)
+
+```
+
+
+```{r}
+#| label: fit_rl
+
+# a = Sys.time()
+# fit_rl = fit(wf_rl, train)
+# tempo_rl = Sys.time() - a
+# 
+# fit_rl_leve = butcher(fit_rl)
+# saveRDS(fit_rl_leve, "fit_rl_leve.rds")
+
+# Retorna os coeficientes com seus pvalores
+#fit_rl |>
+#  extract_fit_parsnip() |>
+#  tidy()
+
+fit_rl = readRDS("fit_rl_leve.rds")
+```
+
+```{r cache = TRUE}
+#| label: fit_rf
+
+# a = Sys.time()
+# fit_rf  = fit(wf_rf,  train)
+# tempo_rf = Sys.time() - a
+# 
+# fit_rf_leve = butcher(fit_rf)
+# saveRDS(fit_rf_leve, "fit_rf_leve.rds")
+
+fit_rf = readRDS("fit_rf_leve.rds")
+
+```
+
+```{r}
+#| label: fit_xgb
+
+# a = Sys.time()
+# fit_xgb = fit(wf_xgb, train)
+# tempo_xgb = Sys.time() - a
+# 
+# fit_xgb_leve = butcher(fit_xgb)
+# saveRDS(fit_xgb_leve, "fit_xgb_leve.rds")
+
+fit_xgb = readRDS("fit_xgb_leve.rds")
+```
+
+```{r}
+# kable(
+#   tibble(Modelo = c("Regressão Logística",
+#                     "Random Forest",
+#                     "XGB"),
+#          `Tempo de Execução (seg)` = c(tempo_rl, tempo_rf, tempo_xgb) ),
+#   caption = "Tempo de treino dos modelos",
+#   digits = 4
+# )
+```
+
+```{r}
+#| label: predict-treino
+
+# Curva ROC e ponto de maximo
+
+pred_rl  = predict(fit_rl, train, type = "prob")
+pred_rf  = predict(fit_rf,  train, type = "prob")
+pred_xgb = predict(fit_xgb, train, type = "prob")
+
+train = train |>
+  mutate(
+    BAIXO_PESO_PRED_rl  = pred_rl$.pred_1,
+    BAIXO_PESO_PRED_rf  = pred_rf$.pred_1,
+    BAIXO_PESO_PRED_xgb = pred_xgb$.pred_1
+  )
+
+```
+
+
+```{r}
+#| label: predict-validacao
+
+pred_rl  = predict(fit_rl, validation, type = "prob")
+pred_rf  = predict(fit_rf,  validation, type = "prob")
+pred_xgb = predict(fit_xgb, validation, type = "prob")
+
+validation = validation |>
+  mutate(
+    BAIXO_PESO_PRED_rl  = pred_rl$.pred_1,
+    BAIXO_PESO_PRED_rf  = pred_rf$.pred_1,
+    BAIXO_PESO_PRED_xgb = pred_xgb$.pred_1
+  )
+
+
+```
+
+```{r}
+#| label: predict-teste
+
+pred_rl  = predict(fit_rl, teste, type = "prob")
+pred_rf  = predict(fit_rf,  teste, type = "prob")
+pred_xgb = predict(fit_xgb, teste, type = "prob")
+
+teste = teste |>
+  mutate(
+    BAIXO_PESO_PRED_rl  = pred_rl$.pred_1,
+    BAIXO_PESO_PRED_rf  = pred_rf$.pred_1,
+    BAIXO_PESO_PRED_xgb = pred_xgb$.pred_1
+  )
+
+```
+
+```{r}
+#| label: ponto-corte
+
+roc_rl = train |> 
+  roc_curve(BAIXO_PESO, BAIXO_PESO_PRED_rl, event_level = "second")
+roc_rf = train |> 
+  roc_curve(BAIXO_PESO, BAIXO_PESO_PRED_rf, event_level = "second")
+roc_xgb = train |> 
+  roc_curve(BAIXO_PESO, BAIXO_PESO_PRED_xgb, event_level = "second")
+
+pontos_otimos = tibble(
+  Modelo = c(
+    "Regressão Logística", 
+    "Random Forest", 
+    "XGB"
+  ),
+  `Ponto Ótimo` = c(
+    ponto_otimo_auc(roc_rl),
+    ponto_otimo_auc(roc_rf),
+    ponto_otimo_auc(roc_xgb)
+
+  )
+)
+
+ponto_otimo_rl  = ponto_otimo_auc(roc_rl )
+ponto_otimo_rf  = ponto_otimo_auc(roc_rf )
+ponto_otimo_xgb = ponto_otimo_auc(roc_xgb)
+
+rm(roc_rl, roc_rf, roc_xgb, pred_rl, pred_rf, pred_xgb)
+
+kable(pontos_otimos, 
+caption = "Ponto ótimo de threshold para os modelos",
+digits = 4)
+```
+
+
+```{r}
+#| label: predict-class
+
+train = train |>
+    mutate(
+      BAIXO_PESO_PRED_rl_class  = if_else(BAIXO_PESO_PRED_rl >= ponto_otimo_rl, 1, 0),
+      BAIXO_PESO_PRED_rf_class  = if_else(BAIXO_PESO_PRED_rf >= ponto_otimo_rf, 1, 0),
+      BAIXO_PESO_PRED_xgb_class = if_else(BAIXO_PESO_PRED_xgb >= ponto_otimo_xgb, 1, 0),
+    ) |>
+      mutate_at(c("BAIXO_PESO_PRED_rl_class", 
+                  "BAIXO_PESO_PRED_rf_class",
+                  "BAIXO_PESO_PRED_xgb_class"),
+                  as.factor)
+
+validation = validation |>
+    mutate(
+      BAIXO_PESO_PRED_rl_class  = if_else(BAIXO_PESO_PRED_rl >= ponto_otimo_rl, 1, 0),
+      BAIXO_PESO_PRED_rf_class  = if_else(BAIXO_PESO_PRED_rf >= ponto_otimo_rf, 1, 0),
+      BAIXO_PESO_PRED_xgb_class = if_else(BAIXO_PESO_PRED_xgb >= ponto_otimo_xgb, 1, 0),
+    ) |>
+      mutate_at(c("BAIXO_PESO_PRED_rl_class", 
+                  "BAIXO_PESO_PRED_rf_class",
+                  "BAIXO_PESO_PRED_xgb_class"),
+                  as.factor)
+
+teste = teste |>
+    mutate(
+      BAIXO_PESO_PRED_rl_class  = if_else(BAIXO_PESO_PRED_rl >= ponto_otimo_rl, 1, 0),
+      BAIXO_PESO_PRED_rf_class  = if_else(BAIXO_PESO_PRED_rf >= ponto_otimo_rf, 1, 0),
+      BAIXO_PESO_PRED_xgb_class = if_else(BAIXO_PESO_PRED_xgb >= ponto_otimo_xgb, 1, 0),
+    ) |>
+      mutate_at(c("BAIXO_PESO_PRED_rl_class", 
+                  "BAIXO_PESO_PRED_rf_class",
+                  "BAIXO_PESO_PRED_xgb_class"),
+                  as.factor)
+```
+
+
+
+```{r}
+kable(calculando_metricas(train),
+caption = paste0("Métricas de desempenho dos modelos na base de Treino - N = ", nrow(train)),
+digits = 3)
+```
+
+```{r}
+kable(calculando_metricas(validation),
+caption = paste0("Métricas de desempenho dos modelos na base de Validação - N = ", nrow(validation)),
+digits = 3)
+```
+
+```{r}
+kable(calculando_metricas(teste),
+caption = paste0("Métricas de desempenho dos modelos na base de Validação - N = ", nrow(teste)),
+digits = 3)
+```
+
+
+
+
+
+
+
+
+
+
+
+
